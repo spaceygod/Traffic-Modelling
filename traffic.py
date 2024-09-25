@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from scipy.interpolate import griddata
+from scipy.stats import pearsonr
 
 # Parameters for BPR function
 alpha = 0.15
@@ -46,7 +47,7 @@ cars = []
 car_id = 0
 for minute, num_cars in enumerate(cars_arriving_each_minute):
     for _ in range(num_cars):
-        car = {"id": car_id, "start_time": minute, "location": "", "arrived_at_latest_node": 0, "left_at_latest_node": 0}
+        car = {"id": car_id, "start_time": minute, "location": "", "arrived_at_node": 0, "left_at_node": 0, "was_on_route": ""}  # Initialize car data
         cars.append(car)
         car_id += 1
 
@@ -74,8 +75,8 @@ def compute_edge_probability(outgoing_edges, vehicle_counts, edges, cars):
 
         if N_e != 0:
             # Vectorized calculation of rt_i for all cars on this edge
-            arrival_next_node = np.array([car["arrived_at_latest_node"] for car in cars_by_edge[edge]])
-            arrived_times = np.array([car["left_at_latest_node"] for car in cars_by_edge[edge]])
+            arrival_next_node = np.array([car["arrived_at_node"] for car in cars_by_edge[edge]])
+            arrived_times = np.array([car["left_at_node"] for car in cars_by_edge[edge]])
             rt_i_values = calculate_rt_i(arrival_next_node, arrived_times)
 
             probability_numerator_sum = np.sum(rt_i_values)
@@ -127,7 +128,7 @@ def choose_next_edge(location, vehicle_counts, edges, cars):
 def travel_time_bpr(tt_0, N_e, C_e, alpha, beta, sigma):
     return tt_0 * (1 + alpha * (N_e / C_e) ** beta) + np.random.normal(0, sigma**2)
 
-# Example node positions for plotting (adjust as needed)
+# Node positions for plotting
 node_positions = {
     "City 1": (0, 0),
     "A": (2, 2),
@@ -217,15 +218,17 @@ def simulate_and_visualize(cars, edges, num_minutes, warmup_steps=120, most_cong
                 continue
 
             # Check if the car has finished its route
-            if t-car["start_time"] >= car["arrived_at_latest_node"] and not car["location"] in ["City 1", "A", "B", "C", "D", "E"]:
-                # Remove the car from the route it just finished
-                vehicle_counts[car["location"]] -= 1
+            if t-car["start_time"] >= car["arrived_at_node"] and not car["location"] in ["City 1", "A", "B", "C", "D", "E"]:
+                # Store the edge the car was on before reaching a node
+                car["was_on_route"] = car["location"]
                 # Update the car's location
                 car["location"] = car["location"].split(" → ")[-1]
                 # Check if the reached location is City 2
                 if car["location"] == "City 2":
+                    # Remove the car from the route it just finished if it reached City 2
+                    vehicle_counts[car["was_on_route"]] -= 1
                     if car["start_time"] > warmup_steps:
-                        car_reach_times.append(car["arrived_at_latest_node"])
+                        car_reach_times.append(car["arrived_at_node"])
                 continue
 
             # Choose the next edge if the car is at a node
@@ -241,18 +244,22 @@ def simulate_and_visualize(cars, edges, num_minutes, warmup_steps=120, most_cong
                 C_e = edges[next_edge]["current_capacity"]
                 travel_time = travel_time_bpr(tt_0, N_e, C_e, alpha, beta, sigma)
 
-                # Update the car's left- and arrived_at_latest_node and assign a new route
-                car["left_at_latest_node"] = t - car["start_time"]
-                car["arrived_at_latest_node"] = car["left_at_latest_node"] + round(travel_time[0])
+                # Update the car's left- and arrived_at_node and assign a new route
+                car["left_at_node"] = t - car["start_time"]
+                car["arrived_at_node"] = car["left_at_node"] + round(travel_time[0])
                 car["location"] = next_edge
 
                 # Update vehicle count for the edge
                 vehicle_counts[next_edge] += 1
+                if car["was_on_route"]:
+                    vehicle_counts[car["was_on_route"]] -= 1
 
             # Record congestion level
             if most_congested_edge is None:
-                for edge in edges:
-                    congestion_data[edge].append(vehicle_counts[edge][0] / edges[edge]["capacity"])
+                # If warmup period is over, record congestion data
+                if t > warmup_steps:
+                    for edge in edges:
+                        congestion_data[edge].append(vehicle_counts[edge][0] / edges[edge]["capacity"])
 
         # Update the plot with the current state
         update_plot(t, cars, vehicle_counts, edge_texts, node_texts, timestep_text, num_minutes)
@@ -274,13 +281,25 @@ def simulate_and_visualize(cars, edges, num_minutes, warmup_steps=120, most_cong
 
     return car_reach_times, avg_congestion
 
+def reset_vehicle_counts(edges):
+    for edge in edges:
+        edges[edge]["current_capacity"] = edges[edge]["capacity"]  # Reset to original capacity
+
+def reset_car_states(cars):
+    for car in cars:
+        car["location"] = ""
+        car["arrived_at_node"] = 0
+        car["left_at_node"] = 0
+        car["was_on_route"] = ""
+
 # Run the function multiple times with different capacity values
-def simulate_and_compare(cars, edges, num_minutes, deltas=[1.5, 2]):
+def simulate_and_compare(cars, edges, num_minutes, deltas=[1.15, 1.3, 1.45, 1.6, 1.75, 1.9, 2.05, 2.2, 2.35, 2.5, 2.65, 2.8, 2.95, 3.1, 3.25, 3.4, 3.55, 3.7, 3.85, 4.0]):
     # Ask the user if it wants the traffic simulation to be animated
     animate = input("Do you want to animate the traffic simulation in real-time? You will have to close the plots for the code to continue if a full simulation is done. (y/n): ").lower() == "y"
 
     # Initial run to find the most congested edge
     print(f"Running simulation with capacity multiplier: 1.0")
+
     car_reach_times, avg_congestion = simulate_and_visualize(cars, edges, num_minutes, warmup_steps=120, animate=animate)
     most_congested_edge = max(avg_congestion, key=avg_congestion.get)
     print(f"Most congested edge: {most_congested_edge}")
@@ -289,9 +308,14 @@ def simulate_and_compare(cars, edges, num_minutes, deltas=[1.5, 2]):
 
     # Run the simulation multiple times with different capacity multipliers
     for delta in deltas:
+        # Reset vehicle counts and car states before running the simulation
+        reset_vehicle_counts(edges)
+        reset_car_states(cars)
+
         print(f"Running simulation with capacity multiplier: {delta}")
         car_reach_times, _ = simulate_and_visualize(cars, edges, num_minutes, most_congested_edge=most_congested_edge, capacity_multiplier=delta, warmup_steps=10, animate=animate)
         all_car_reach_times.append((delta, car_reach_times))
+        print(f"Simulation with capacity multiplier {delta} completed.")
 
     return all_car_reach_times, most_congested_edge
 
@@ -340,6 +364,46 @@ def plot_3D_surface(all_car_reach_times, bins=25, grid_res=100):
     fig.colorbar(surf, ax=ax, shrink=0.5, aspect=5)
     plt.show()
 
+def plot_scatter_with_correlation(all_car_reach_times):
+    # Prepare data for scatter plots
+    deltas = []
+    avg_reach_times = []
+    cars_reached_city_2 = []
+
+    for delta, car_reach_times in all_car_reach_times:
+        deltas.append(delta)
+        avg_reach_times.append(np.mean(car_reach_times))  # Average reach time for each delta
+        cars_reached_city_2.append(len(car_reach_times))  # Number of cars that reached City 2 for each delta
+
+    # Plot scatter plot for delta vs avg reach time
+    plt.figure(figsize=(14, 6))
+
+    # Scatter plot 1: Delta vs. Average Car Reach Time
+    plt.subplot(1, 2, 1)
+    plt.scatter(deltas, avg_reach_times, color='b')
+    plt.title("Delta vs. Average Car Reach Time")
+    plt.xlabel("Capacity Multiplier (Delta)")
+    plt.ylabel("Average Car Reach Time (minutes)")
+    
+    # Compute correlation coefficient for delta vs avg reach time
+    correlation_coef1, _ = pearsonr(deltas, avg_reach_times)
+    plt.text(1.1, max(avg_reach_times) - 1, f"Correlation Coefficient: {correlation_coef1:.2f}", fontsize=12, color='blue')
+
+    # Scatter plot 2: Delta vs. Number of Cars Reached City 2
+    plt.subplot(1, 2, 2)
+    plt.scatter(deltas, cars_reached_city_2, color='g')
+    plt.title("Delta vs. Number of Cars Reached City 2")
+    plt.xlabel("Capacity Multiplier (Delta)")
+    plt.ylabel("Number of Cars Reached City 2")
+
+    # Compute correlation coefficient for delta vs cars reached
+    correlation_coef2, _ = pearsonr(deltas, cars_reached_city_2)
+    plt.text(1.1, max(cars_reached_city_2) - 10, f"Correlation Coefficient: {correlation_coef2:.2f}", fontsize=12, color='green')
+
+    plt.tight_layout()
+    plt.show()
+
 # Run the simulation and plot the results
 all_car_reach_times, most_congested_edge = simulate_and_compare(cars, edges, num_minutes)
 plot_3D_surface(all_car_reach_times)
+plot_scatter_with_correlation(all_car_reach_times)
