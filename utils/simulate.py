@@ -25,7 +25,6 @@ def simulate_and_visualize(cars, edges, node_positions, num_minutes, warmup_step
 
     # Function to update the plot at each timestep
     def update(t):
-        artists = [] # (SM edit)
         for car in cars:
             if car["location"] == "City 2":
                 cars.remove(car)
@@ -63,36 +62,6 @@ def simulate_and_visualize(cars, edges, node_positions, num_minutes, warmup_step
                 C_e = edges[next_edge]["current_capacity"]
                 travel_time = travel_time_bpr(tt_0, N_e, C_e, alpha, beta, sigma)
                 
-            ######################### Beginning of edits by SCRUNCHMIN.
-                
-                # 'Progress' on an edge (tracking car's position)
-                start_node, end_node = next_edge.split(" → ")
-                start_pos = np.array(node_positions[start_node])
-                end_pos = np.array(node_positions[end_node])
-
-                # Calculate the progress of the car along the edge
-                time_spent_on_edge = t - car["left_at_node"]
-                total_travel_time_on_edge = car["arrived_at_node"] - car["left_at_node"]
-
-                # Ensure we avoid division by zero
-                if total_travel_time_on_edge <= 0:
-                    progress_fraction = 1  # If travel time is zero or negative, set progress to 100% (car immediately arrives)
-                    # Deze regel zorgt er misschien voor dat de auto's 'warpen' tussen nodes i.p.v. 'glijden' over edges.
-                else:
-                    progress_fraction = min(1, time_spent_on_edge / total_travel_time_on_edge)  # Ensure the progress does not exceed 1
-
-                # Interpolate the car's position between the start and end node
-                car["pos"] = start_pos + progress_fraction * (end_pos - start_pos)
-                # De auto's hebben nog geen 'pos' en 'image', dus dat moet er nog bij.
-
-                # Plot the car icons
-                imagebox = OffsetImage(car["image"], zoom=0.015)  # Use the pre-loaded car image
-                ab = AnnotationBbox(imagebox, car["pos"], frameon=False)
-                ax.add_artist(ab)
-                artists.append(ab) # Put the artists in the list
-                
-                ######################### Ending of edits by SCRUNCHMIN.
-                
                 # Update the car's left- and arrived_at_node and assign a new route
                 car["left_at_node"] = t - car["start_time"]
                 car["arrived_at_node"] = car["left_at_node"] + round(travel_time[0])
@@ -112,9 +81,6 @@ def simulate_and_visualize(cars, edges, node_positions, num_minutes, warmup_step
 
         # Update the plot with the current state
         update_plot(t, edges, vehicle_counts, edge_texts, timestep_text, num_minutes)
-
-        # Return all modified artists (SM edit)
-        return artists + list(edge_texts.values()) + list(node_texts.values()) + [timestep_text]
 
     if animate:
         # Animate the plot over time
