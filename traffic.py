@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from scipy.interpolate import griddata
 from scipy.stats import pearsonr
+from tqdm import tqdm
 
 # Parameters for BPR function
 alpha = 0.15
@@ -31,11 +32,13 @@ for edge, properties in edges.items():
     tt_0 = (length / speed_limit) * (60 / 1000)  # minutes
     properties["tt_0"] = tt_0
     properties["capacity"] = int(properties["lanes"] * properties["length"] / (l_car + d_spacing))
+    properties["current_capacity"] = int(properties["capacity"])
 
 # Simulation settings
 num_minutes = 240
-car_distribution_mean = 95
-car_distribution_std = 1
+warmup_steps = 120
+car_distribution_mean = 85
+car_distribution_std = 1.5
 
 # Sample the number of cars arriving at City 1 each minute
 np.random.seed(42)
@@ -65,8 +68,12 @@ def compute_edge_probability(outgoing_edges, vehicle_counts, edges, cars):
     # Group cars by their current edge to avoid filtering multiple times
     cars_by_edge = {edge: [] for edge in outgoing_edges}
     for car in cars:
-        if car["location"] in outgoing_edges:
-            cars_by_edge[car["location"]].append(car)
+        if car["location"] in ["A", "B", "C", "D", "E"]:
+            if car["was_on_route"] in outgoing_edges:
+                cars_by_edge[car["was_on_route"]].append(car)
+        elif car["location"] in outgoing_edges:
+            if car["location"] in outgoing_edges:
+                cars_by_edge[car["location"]].append(car)
 
     for edge in outgoing_edges:
         # Get travel time tt_0 for the edge
@@ -177,20 +184,11 @@ def update_plot(t, cars, vehicle_counts, edge_texts, node_texts, timestep_text, 
         capacity = edges[edge]["current_capacity"]
         text.set_text(f"{num_cars}/{capacity}")
 
-    # Update node texts with the number of cars waiting at each node
-    cars_at_node = {node: 0 for node in node_positions}
-    for car in cars:
-        if car["location"] in ["City 1", "A", "B", "C", "D", "E", "City 2"]:
-            cars_at_node[car["location"]] += 1
-
-    for node, text in node_texts.items():
-        text.set_text(f"Waiting: {cars_at_node[node]}")
-
     # Update the timestep text
     timestep_text.set_text(f"Timestep: {t}/{num_minutes}")
 
 # Simulation and visualization combined
-def simulate_and_visualize(cars, edges, num_minutes, warmup_steps=120, most_congested_edge=None, capacity_multiplier=1.0, animate=False):
+def simulate_and_visualize(cars, edges, num_minutes, warmup_steps=warmup_steps, most_congested_edge=None, track_most_congested=True, capacity_multiplier=1.0, animate=False):
     fig, ax, edge_texts, node_texts, timestep_text = initialize_plot()
 
     # Initialize vehicle counts on each edge
@@ -200,21 +198,24 @@ def simulate_and_visualize(cars, edges, num_minutes, warmup_steps=120, most_cong
     car_reach_times = []
 
     # Track the congestion of each edge
-    if most_congested_edge is None:
+    if track_most_congested:
         congestion_data = {edge: [] for edge in edges}
-        for edge in edges:
-            edges[edge]["current_capacity"] = edges[edge]["capacity"]
-    else:
+
+    # Track the congestion of each edge
+    if most_congested_edge is not None:
         edges[most_congested_edge]["current_capacity"] = int(edges[most_congested_edge]["capacity"] * capacity_multiplier)
 
     # Function to update the plot at each timestep
     def update(t):
         for car in cars:
+            if car["location"] == "City 2":
+                cars.remove(car)
+                continue
             # Check if the car should start yet
             if car["start_time"] == t:
                 car["location"] = "City 1"
             # Skip cars that haven't started yet or have already finished
-            elif t < car["start_time"] or car["location"] == "City 2":
+            elif t < car["start_time"]:
                 continue
 
             # Check if the car has finished its route
@@ -229,7 +230,6 @@ def simulate_and_visualize(cars, edges, num_minutes, warmup_steps=120, most_cong
                     vehicle_counts[car["was_on_route"]] -= 1
                     if car["start_time"] > warmup_steps:
                         car_reach_times.append(car["arrived_at_node"])
-                continue
 
             # Choose the next edge if the car is at a node
             if car["location"] in ["City 1", "A", "B", "C", "D", "E"]:
@@ -255,7 +255,7 @@ def simulate_and_visualize(cars, edges, num_minutes, warmup_steps=120, most_cong
                     vehicle_counts[car["was_on_route"]] -= 1
 
             # Record congestion level
-            if most_congested_edge is None:
+            if track_most_congested:
                 # If warmup period is over, record congestion data
                 if t > warmup_steps:
                     for edge in edges:
@@ -269,21 +269,17 @@ def simulate_and_visualize(cars, edges, num_minutes, warmup_steps=120, most_cong
         anim = FuncAnimation(fig, update, frames=range(num_minutes), repeat=False, interval=100)
         plt.show()
     else:
-        # Run the simulation without animation
-        for t in range(num_minutes):
+        # Run the simulation without animation using tqdm for a progress bar
+        for t in tqdm(range(num_minutes), desc=f"Simulating"):
             update(t)
 
     # Calculate average congestion per edge
-    if most_congested_edge is None:
+    if track_most_congested:
         avg_congestion = {edge: np.mean(congestion_data[edge]) for edge in edges}
     else:
         avg_congestion = None
 
     return car_reach_times, avg_congestion
-
-def reset_vehicle_counts(edges):
-    for edge in edges:
-        edges[edge]["current_capacity"] = edges[edge]["capacity"]  # Reset to original capacity
 
 def reset_car_states(cars):
     for car in cars:
@@ -293,14 +289,14 @@ def reset_car_states(cars):
         car["was_on_route"] = ""
 
 # Run the function multiple times with different capacity values
-def simulate_and_compare(cars, edges, num_minutes, deltas=[1.15, 1.3, 1.45, 1.6, 1.75, 1.9, 2.05, 2.2, 2.35, 2.5, 2.65, 2.8, 2.95, 3.1, 3.25, 3.4, 3.55, 3.7, 3.85, 4.0]):
+def simulate_and_compare(cars, edges, num_minutes, deltas=[1.4, 1.8, 2.2, 2.6, 3.0, 3.4, 3.8, 4.2, 4.6, 5.0]):
     # Ask the user if it wants the traffic simulation to be animated
     animate = input("Do you want to animate the traffic simulation in real-time? You will have to close the plots for the code to continue if a full simulation is done. (y/n): ").lower() == "y"
 
     # Initial run to find the most congested edge
     print(f"Running simulation with capacity multiplier: 1.0")
 
-    car_reach_times, avg_congestion = simulate_and_visualize(cars, edges, num_minutes, warmup_steps=120, animate=animate)
+    car_reach_times, avg_congestion = simulate_and_visualize(cars.copy(), edges.copy(), num_minutes, warmup_steps=warmup_steps, animate=animate)
     most_congested_edge = max(avg_congestion, key=avg_congestion.get)
     print(f"Most congested edge: {most_congested_edge}")
 
@@ -309,11 +305,11 @@ def simulate_and_compare(cars, edges, num_minutes, deltas=[1.15, 1.3, 1.45, 1.6,
     # Run the simulation multiple times with different capacity multipliers
     for delta in deltas:
         # Reset vehicle counts and car states before running the simulation
-        reset_vehicle_counts(edges)
         reset_car_states(cars)
 
         print(f"Running simulation with capacity multiplier: {delta}")
-        car_reach_times, _ = simulate_and_visualize(cars, edges, num_minutes, most_congested_edge=most_congested_edge, capacity_multiplier=delta, warmup_steps=10, animate=animate)
+        car_reach_times, avg_congestion = simulate_and_visualize(cars.copy(), edges.copy(), num_minutes, most_congested_edge=most_congested_edge, capacity_multiplier=delta, warmup_steps=warmup_steps, animate=animate)
+        print(f"Most congested edge: {max(avg_congestion, key=avg_congestion.get)}")
         all_car_reach_times.append((delta, car_reach_times))
         print(f"Simulation with capacity multiplier {delta} completed.")
 
