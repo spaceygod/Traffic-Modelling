@@ -6,8 +6,8 @@ from utils.functional import choose_next_edge, travel_time_bpr, reset_car_states
 from utils.visualization import initialize_plot, update_plot
 
 # Simulation and visualization combined
-def simulate_and_visualize(cars, edges, node_positions, num_minutes, warmup_steps=120, most_congested_edge=None, track_most_congested=True, capacity_multiplier=1.0, animate=False, alpha=0.15, beta=4, sigma=2):
-    fig, ax, edge_texts, timestep_text = initialize_plot(edges, node_positions)
+def simulate_and_visualize(cars, edges, node_positions, num_minutes, warmup_steps=120, most_congested_edge=None, track_most_congested=True, capacity_multiplier=1.0, animate=False, alpha=0.15, beta=4, sigma=2, bg_image=None, lat_min=None, lat_max=None, lon_min=None, lon_max=None):
+    fig, ax, edge_texts, timestep_text = initialize_plot(edges, node_positions, bg_image, lat_min, lat_max, lon_min, lon_max)
 
     # Initialize vehicle counts on each edge
     vehicle_counts = {edge: np.zeros(1, dtype=int) for edge in edges}
@@ -100,14 +100,14 @@ def simulate_and_visualize(cars, edges, node_positions, num_minutes, warmup_step
     return car_reach_times, avg_congestion
 
 # Run the function multiple times with different capacity values
-def simulate_and_compare(cars, edges, node_positions, num_minutes, warmup_steps, deltas, alpha=0.15, beta=4, sigma=2):
+def simulate_and_compare(cars, edges, node_positions, num_minutes, warmup_steps, deltas, alpha=0.15, beta=4, sigma=2, bg_image=None, lat_min=None, lat_max=None, lon_min=None, lon_max=None):
     # Ask the user if it wants the traffic simulation to be animated
     animate = input("Do you want to animate the traffic simulation in real-time? You will have to close the plots for the code to continue if a full simulation is done. (y/n): ").lower() == "y"
 
     # Initial run to find the most congested edge
     print(f"Running simulation with capacity multiplier: 1.0")
 
-    car_reach_times, avg_congestion = simulate_and_visualize(cars.copy(), edges.copy(), node_positions, num_minutes, warmup_steps=warmup_steps, animate=animate)
+    car_reach_times, avg_congestion = simulate_and_visualize(cars.copy(), edges.copy(), node_positions, num_minutes, warmup_steps=warmup_steps, animate=animate, bg_image=bg_image, lat_min=lat_min, lat_max=lat_max, lon_min=lon_min, lon_max=lon_max)
     most_congested_edge = max(avg_congestion, key=avg_congestion.get)
     print(f"Most congested edge: {most_congested_edge}")
 

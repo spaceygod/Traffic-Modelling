@@ -51,18 +51,8 @@ def compute_edge_probability(outgoing_edges, vehicle_counts, edges, cars):
 
 # Function to choose the next edge based on the probabilities
 def choose_next_edge(location, vehicle_counts, edges, cars):
-    if location == "City 1":
-        outgoing_edges = ["City 1 → A", "City 1 → B"]
-    elif location == "A":
-        outgoing_edges = ["A → C"]
-    elif location == "B":
-        outgoing_edges = ["B → C"]
-    elif location == "C":
-        outgoing_edges = ["C → D", "C → City 2", "C → E", ]
-    elif location == "D":
-        outgoing_edges = ["D → City 2"]
-    elif location == "E":
-        outgoing_edges = ["E → City 2"]
+    # Find all outgoing edges from the current location
+    outgoing_edges = [edge for edge in edges if edge.startswith(f"{location} →")]
     
     # Check whether the capacity of the outgoing edges is reached
     outgoing_edges = [edge for edge in outgoing_edges if vehicle_counts[edge] < edges[edge]["current_capacity"]]

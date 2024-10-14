@@ -2,6 +2,7 @@ import numpy as np
 from utils.plotting import plot_3D_surface, plot_scatter_with_correlation
 from utils.functional import add_properties_to_edges
 from utils.simulate import simulate_and_compare
+import matplotlib.image as mpimg
 
 # Parameters for BPR function
 alpha = 0.15
@@ -280,7 +281,15 @@ for minute, num_cars in enumerate(cars_arriving_each_minute):
         cars.append(car)
         car_id += 1
 
+# Reloading the image and setting up dimensions
+bg_image = mpimg.imread('./Images/netherlands/blank_netherlands.png')
+
+# Set the correct lat/lon extent for the map of the Netherlands
+# Here we assume these lat/lon bounds (min_lat, max_lat, min_lon, max_lon) for the image:
+lat_min, lat_max = 50.75, 53.55  # Approx latitude range of the Netherlands
+lon_min, lon_max = 3.36, 7.22    # Approx longitude range of the Netherlands
+
 # Run the simulation and plot the results
-all_car_reach_times, most_congested_edge = simulate_and_compare(cars, edges, node_positions, num_minutes, warmup_steps, deltas=[1.4, 1.8, 2.2, 2.6, 3.0, 3.4, 3.8, 4.2, 4.6, 5.0], alpha=0.15, beta=4, sigma=2)
+all_car_reach_times, most_congested_edge = simulate_and_compare(cars, edges, node_positions, num_minutes, warmup_steps, deltas=[1.4, 1.8, 2.2, 2.6, 3.0, 3.4, 3.8, 4.2, 4.6, 5.0], alpha=0.15, beta=4, sigma=2, bg_image=bg_image, lat_min=lat_min, lat_max=lat_max, lon_min=lon_min, lon_max=lon_max)
 plot_3D_surface(all_car_reach_times)
 plot_scatter_with_correlation(all_car_reach_times)
