@@ -1,5 +1,7 @@
 import numpy as np
-from utils.functional import add_properties_to_edges
+import math
+from utils.functional_extended import add_properties_to_nodes
+from utils.functional_extended import add_properties_to_edges
 
 # Parameters for BPR function
 alpha = 0.15
@@ -7,6 +9,34 @@ beta = 4
 sigma = 2
 l_car = 4.5 # Length of a car in meters
 d_spacing = 55 # Minimum safe spacing between cars in meters
+
+# Simulation settings
+num_minutes = 240
+warmup_steps = 120
+total_cars_spawned_each_minute = 100
+car_distribution_std = 1.5
+
+# Node positions for plotting
+nodes = {
+    "City 1": {"coordinates": (0, 0), "population": 1000},
+    "A": {"coordinates": (2, 2), "population": 0},
+    "B": {"coordinates": (2, -2), "population": 0},
+    "C": {"coordinates": (4, 0), "population": 0},
+    "D": {"coordinates": (6, 2), "population": 0},
+    "E": {"coordinates": (6, -2), "population": 0},
+    "City 2": {"coordinates": (8, 0), "population": 600}
+}
+
+# Create a dictionary containing the Euclidean distance between each pair of nodes
+distance_matrix = {}
+for node_A, properties_A in nodes.items():
+    for node_B, properties_B in nodes.items():
+        if node_A == node_B:
+            distance_matrix[node_A + " → " + node_B] = 0
+        elif node_B + " → " + node_A in distance_matrix:
+            distance_matrix[node_A + " → " + node_B] = distance_matrix[node_B + " → " + node_A]
+        else:
+            distance_matrix[node_A + " → " + node_B] = math.sqrt((properties_A["coordinates"][0] - properties_B["coordinates"][0])**2 + (properties_A["coordinates"][1] - properties_B["coordinates"][1])**2)
 
 # Define the road network (length in meters, speed limit in km/h, number of lanes)
 edges = {
@@ -21,37 +51,45 @@ edges = {
     "E → City 2": {"length": 5000, "speed_limit": 100, "lanes": 2},
 }
 
-# Node positions for plotting
-node_positions = {
-    "City 1": (0, 0),
-    "A": (2, 2),
-    "B": (2, -2),
-    "C": (4, 0),
-    "D": (6, 2),
-    "E": (6, -2),
-    "City 2": (8, 0)
-}
+# Add properties to nodes
+nodes = add_properties_to_nodes(nodes, edges)
+
+print(distance_matrix["City 1 → A"])
+print(nodes["City 1"]["neighboring nodes"])
 
 # Add properties to edges
 edges = add_properties_to_edges(edges, l_car, d_spacing)
 
-# Simulation settings
-num_minutes = 240
-warmup_steps = 120
-car_distribution_mean = 85
-car_distribution_std = 1.5
+# Create a dictionary containing what fraction of cars will travel from each node A to each node B
+travel_matrix = {}
 
-# Sample the number of cars arriving at City 1 each minute
+# Calculating the total population
+total_population = 0
+for node, properties in nodes.items():
+    total_population += properties["population"]
+
+# Filling in the travel matrix
+for origin, origin_properties in nodes.items():
+    for destination, destination_properties in nodes.items():
+        if origin == destination:
+            continue
+        else:
+            travel_matrix[origin + " → " + destination] = (origin_properties["population"] / total_population) * (destination_properties["population"] / (total_population - origin_properties["population"]))
+
+print(travel_matrix)
+
+# Sample the number of cars spawning at each origin and going to each destination for each minute
 np.random.seed(42)
-cars_arriving_each_minute = np.random.normal(car_distribution_mean, car_distribution_std, num_minutes)
-cars_arriving_each_minute = np.round(cars_arriving_each_minute).astype(int)
+cars_spawned_each_minute = {} # dictionary with structure 'origin → destination : [#cars spawned at t=0 in origin going to destination, #cars spawned at t=1 in ..., ...]'
+for origin_destination, fraction_of_cars in travel_matrix.items():
+    cars_spawned_each_minute[origin_destination] = np.round(np.random.normal(total_cars_spawned_each_minute * fraction_of_cars, car_distribution_std, num_minutes)).astype(int)
 
 # Initialize data for cars
 cars = []
 car_id = 0
-for minute, num_cars in enumerate(cars_arriving_each_minute):
-    for _ in range(num_cars):
-        car = {"id": car_id, "start_time": minute, "location": "", "arrived_at_node": 0, "left_at_node": 0, "was_on_route": ""}  # Initialize car data
-        cars.append(car)
-        car_id += 1
-
+for minute in range(num_minutes):
+    for origin_destination, cars_spawned_over_time in cars_spawned_each_minute.items():
+        for _ in range(cars_spawned_over_time[minute]):
+            car = {"id": car_id, "origin": origin_destination.split(" → ")[0], "destination": origin_destination.split(" → ")[1], "optimal_path": None, "time_spawned": minute, "time_arrived": None, "location": None, "time_entered_last_edge": None}  # Initialize car data
+            cars.append(car)
+            car_id += 1
