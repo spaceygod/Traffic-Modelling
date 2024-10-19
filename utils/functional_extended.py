@@ -22,12 +22,32 @@ def add_properties_to_edges(edges, l_car, d_spacing):
 
 # Using A*-algorithm to determine the optimal path for a car
 ## A* applied on a single node
-def A_star(current_node, queue, nodes, edges, time):
-    neighboring_nodes = []
+def A_star(current_route, current_queue, nodes, edges, time, heuristic_constant, distance_matrix, destination):
+    current_path = current_route["path"]
+    current_travel_time = current_route["travel time"]
+    last_node_of_path = current_path[-1].split(" → ")[-1]
+    updated_queue = current_queue
+
+    neighboring_nodes = nodes[last_node_of_path]["neighboring nodes"] # list of the neighboring nodes of the last node of the route that is currently checked
+    for neighbor in neighboring_nodes:
+        new_path = current_path.append(last_node_of_path + " → " + neighbor)
+        new_travel_time = current_travel_time + edges[last_node_of_path + " → " + neighbor]["travel time"][time]
+        new_heuristic = heuristic_constant * distance_matrix[neighbor + " → " + destination]
+        new_total_cost = new_travel_time + new_heuristic
+        new_route = {"path": new_path, "travel time": new_travel_time, "heuristic": new_heuristic, "total cost": new_total_cost}
+        updated_queue.append(new_route)
+    
+    # Sorting routes on total cost, deleting the routes going to the same node that have higher total cost
+    updated_queue = sorted(updated_queue, key=lambda x: x["total cost"])
+    for neighbor in neighboring_nodes:
+
+    
+
+        
 
 
-def determine_path(car, nodes, edges, time, heuristic_constant):
+def determine_path(car, nodes, edges, time, heuristic_constant, distance_matrix):
     origin = car["origin"]
     destination = car["destination"]
-    queue = {} # queue of paths checked by the algorithm in the form {path : cost} where cost is the total travel time of the path + the heuristic (i.e. some constant * the Euclidean distance)
+    queue = [] # list of routes checked by the algorithm. A route is a dictionary {"path": path, "travel time": travel time, "heuristic": heuristic, "total cost": travel time + heuristic} where path is a list of the traversed edges (e.g. [origin→A, A→B, ...]) and heuristic is the heuristic constant * the Euclidean distance from the last node of the path to the destination
 

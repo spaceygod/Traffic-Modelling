@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import numpy as np
 import math
 from utils.functional_extended import add_properties_to_nodes
@@ -52,10 +56,7 @@ edges = {
 }
 
 # Add properties to nodes
-nodes = add_properties_to_nodes(nodes, edges)
-
-print(distance_matrix["City 1 → A"])
-print(nodes["City 1"]["neighboring nodes"])
+add_properties_to_nodes(nodes, edges)
 
 # Add properties to edges
 edges = add_properties_to_edges(edges, l_car, d_spacing)
