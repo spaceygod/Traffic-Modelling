@@ -19,6 +19,7 @@ num_minutes = 240
 warmup_steps = 120
 total_cars_spawned_each_minute = 100
 car_distribution_std = 1.5
+heuristic_constant = 1
 
 # Node positions for plotting
 nodes = {
@@ -59,7 +60,7 @@ edges = {
 add_properties_to_nodes(nodes, edges)
 
 # Add properties to edges
-edges = add_properties_to_edges(edges, l_car, d_spacing)
+edges = add_properties_to_edges(edges, l_car, d_spacing, num_minutes)
 
 # Create a dictionary containing what fraction of cars will travel from each node A to each node B
 travel_matrix = {}
@@ -91,6 +92,19 @@ car_id = 0
 for minute in range(num_minutes):
     for origin_destination, cars_spawned_over_time in cars_spawned_each_minute.items():
         for _ in range(cars_spawned_over_time[minute]):
-            car = {"id": car_id, "origin": origin_destination.split(" → ")[0], "destination": origin_destination.split(" → ")[1], "optimal_path": None, "time_spawned": minute, "time_arrived": None, "location": None, "time_entered_last_edge": None}  # Initialize car data
+            car = {
+                "id": car_id, 
+                "origin": origin_destination.split(" → ")[0], 
+                "destination": origin_destination.split(" → ")[1], 
+                "optimal path": None, 
+                "optimal travel time": None, 
+                "time spawned": minute, 
+                "time arrived": None, 
+                "active": False, 
+                "location": None, 
+                "time entered last edge": None, 
+                "finished edge": False,
+                "next edge": None
+                } 
             cars.append(car)
             car_id += 1
