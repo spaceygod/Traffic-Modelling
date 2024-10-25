@@ -20,8 +20,7 @@ from utils.functional_extended import iterate_A_star, determine_optimal_route
 # The simulation returns the travel time of each car. Cars that did not reach their destination and cars spawned during the warmup steps are ignored.
 
 def simulate_A_star(nodes, edges, cars, alpha, beta, sigma, num_minutes, warmup_steps, distance_matrix, heuristic_constant):
-    travel_times_of_cars = {} # Dictionary of the form {"A → B": [travel times of cars travelling from A to B], ...}
-
+    
     for time in range(num_minutes):
         ## Based on the number of cars on each edge, calculate the travel time of each edge
         for edge, properties in edges.items():
@@ -38,10 +37,14 @@ def simulate_A_star(nodes, edges, cars, alpha, beta, sigma, num_minutes, warmup_
         ## Spawning new cars at their origin and calculating their optimal path
         for car in cars:
             if car["time spawned"] == time:
-                car["active"] = True
-                car["location"] = car["origin"] # Normally a car's location is an edge, but this is the exception
                 car["optimal path"], car["optimal travel time"] = determine_optimal_route(car, nodes, edges, time, heuristic_constant, distance_matrix)
-                car["next edge"] = car["optimal path"][0] + " → " + car["optimal path"][1]
+                
+                if car["optimal path"] is None:
+                    car["active"] = False  # No route available
+                else:
+                    car["active"] = True
+                    car["location"] = car["origin"]
+                    car["next edge"] = car["optimal path"][0] + " → " + car["optimal path"][1] if len(car["optimal path"]) > 1 else None
         
         ## Moving all active cars according to their predetermined optimal path
         for car in cars:
@@ -49,13 +52,19 @@ def simulate_A_star(nodes, edges, cars, alpha, beta, sigma, num_minutes, warmup_
             if car["active"]:
 
                 # If a car is on its origin, check if the first edge on its path is free. If so, enter the edge. If not, wait on the origin
-                if car["location"] == car["origin"]:
+                if car["location"] == car["origin"] and car["next edge"] is not None:
                     cars_on_next_edge = edges[car["next edge"]]["cars on edge"][time]
                     capacity_of_next_edge = edges[car["next edge"]]["capacity"]
+
                     if cars_on_next_edge < capacity_of_next_edge:
                         car["location"] = car["next edge"]
-                        car["next edge"] = car["optimal path"][1] + " → " + car["optimal path"][2]
                         car["time entered last edge"] = time
+
+                        # If this first edge immediately leads to the cars destination, the 'next edge' property should be None
+                        if car["optimal path"][1] == car["destination"]:
+                            car["next edge"] = None
+                        else:
+                            car["next edge"] = car["optimal path"][1] + " → " + car["optimal path"][2]
 
                         # Add one to the number of cars on the edge where this car is located
                         edges[car["location"]]["cars on edge"][time] += 1
@@ -63,25 +72,30 @@ def simulate_A_star(nodes, edges, cars, alpha, beta, sigma, num_minutes, warmup_
                         continue
                 
                 # If a car had not finished its edge (if it was still travelling), check if it has finished its edge now
-                if car["finished edge"] == False:
-                    if time - car["time entered last edge"] >= edges[car["location"]]["travel time"]:
+                if not car["finished edge"]:
+                    if time - car["time entered last edge"] >= edges[car["location"]]["travel time"][time]:
                         car["finished edge"] = True
                     else:
                         # Add one to the number of cars on the edge where this car is located
                         edges[car["location"]]["cars on edge"][time] += 1
                 
                 # If a car has finished its edge (if it is waiting at the end), check if the next edge in its path is free. If so, enter the edge. If not, continue waiting on the edge
-                if car["finished edge"] == True:
+                if car["finished edge"] == True and car["next edge"] is not None:
                     cars_on_next_edge = edges[car["next edge"]]["cars on edge"][time]
                     capacity_of_next_edge = edges[car["next edge"]]["capacity"]
+
                     if cars_on_next_edge < capacity_of_next_edge:
                         car["location"] = car["next edge"]
                         car["time entered last edge"] = time
                         car["finished edge"] = False
 
                         # Some code to determine the next edge from the optimal path
-                        index_of_end_node_of_finished_edge = car["optimal path"].index(car["next edge"].split(" → ")[0])
-                        car["next edge"] = car["optimal path"][index_of_end_node_of_finished_edge + 1] + " → " + car["optimal path"][index_of_end_node_of_finished_edge + 2]
+                        end_node = car["next edge"].split(" → ")[0]
+                        if end_node == car["destination"]:
+                            car["next edge"] = None
+                        else:
+                            index_of_end_node_of_finished_edge = car["optimal path"].index(car["next edge"].split(" → ")[0])
+                            car["next edge"] = car["optimal path"][index_of_end_node_of_finished_edge + 1] + " → " + car["optimal path"][index_of_end_node_of_finished_edge + 2]
 
                         # Add one to the number of cars on the edge where this car is located
                         edges[car["location"]]["cars on edge"][time] += 1
