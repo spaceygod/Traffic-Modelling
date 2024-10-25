@@ -29,10 +29,11 @@ def simulate_A_star(nodes, edges, cars, alpha, beta, sigma, num_minutes, warmup_
 
         ## Removing all cars that have reached their destination
         for car in cars:
-            if car["location"].split(" → ")[-1] == car["destination"] and car["finished edge"] == True: # If a car is on the edge to its destination and it has finished that edge ...
-                car["time arrived"] = time
-                car["active"] = False
-                car["location"] = None
+            if car["location"] != None:
+                if car["location"].split(" → ")[-1] == car["destination"] and car["finished edge"] == True: # If a car is on the edge to its destination and it has finished that edge ...
+                    car["time arrived"] = time
+                    car["active"] = False
+                    car["location"] = None
         
         ## Spawning new cars at their origin and calculating their optimal path
         for car in cars:

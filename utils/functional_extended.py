@@ -62,6 +62,8 @@ def iterate_A_star(current_route, current_queue, nodes, edges, time, heuristic_c
             unique_queue.append(route)  # Keep only the lowest-cost route to each node
             seen_nodes.add(last_node)
 
+    print(f"Queue after iteration: {unique_queue}")
+
     return unique_queue
 
 ## Iterating A* until the destination is reached
@@ -69,6 +71,8 @@ def determine_optimal_route(car, nodes, edges, time, heuristic_constant, distanc
     origin = car["origin"]
     destination = car["destination"]
     queue = [] # list of routes checked by the algorithm. A route is a dictionary {"path": path, "travel time": travel time, "heuristic": heuristic, "total cost": travel time + heuristic} where path is a list of the traversed nodes (e.g. [origin, A, B, ...]) and heuristic is the heuristic constant * the Euclidean distance from the last node of the path to the destination
+
+    print(f"Determining the optimal route of car {car}")
 
     # Starting point of the algorithm
     queue.append({
@@ -78,9 +82,11 @@ def determine_optimal_route(car, nodes, edges, time, heuristic_constant, distanc
         "total cost": heuristic_constant * distance_matrix[origin + " → " + destination]
         })
     
+    print(f"Queue at start: {queue}")
+
     # Running the algorithm
     while queue[0]["path"][-1] != destination:
-        queue = iterate_A_star(queue[0], queue, nodes, edges, time, heuristic_constant, distance_matrix)
+        queue = iterate_A_star(queue[0], queue, nodes, edges, time, heuristic_constant, distance_matrix, destination)
     
     # Returning the optimal route
     optimal_path = queue[0]["path"]

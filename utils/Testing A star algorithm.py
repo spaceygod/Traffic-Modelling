@@ -7,6 +7,8 @@ import math
 from utils.functional_extended import add_properties_to_nodes
 from utils.functional_extended import add_properties_to_edges
 from utils.simulate_extended import simulate_A_star
+from utils.functional import travel_time_bpr
+from utils.functional_extended import iterate_A_star, determine_optimal_route
 
 # Parameters for BPR function
 alpha = 0.15
@@ -14,12 +16,8 @@ beta = 4
 sigma = 2
 l_car = 4.5 # Length of a car in meters
 d_spacing = 55 # Minimum safe spacing between cars in meters
+num_minutes = 240
 
-# Simulation settings
-num_minutes = 10
-warmup_steps = 0
-total_cars_spawned_each_minute = 2
-car_distribution_std = 1.5
 heuristic_constant = 1
 
 # Node positions for plotting
@@ -63,60 +61,25 @@ add_properties_to_nodes(nodes, edges)
 # Add properties to edges
 add_properties_to_edges(edges, l_car, d_spacing, num_minutes)
 
-# Create a dictionary containing what fraction of cars will travel from each node A to each node B
-travel_matrix = {}
-
-print(travel_matrix)
-
-# Calculating the total population
-total_population = 0
-for node, properties in nodes.items():
-    total_population += properties["population"]
-
-# Filling in the travel matrix
-for origin, origin_properties in nodes.items():
-    for destination, destination_properties in nodes.items():
-        if origin == destination:
-            continue
-        else:
-            travel_matrix[origin + " → " + destination] = (origin_properties["population"] / total_population) * (destination_properties["population"] / (total_population - origin_properties["population"]))
-
-# Sample the number of cars spawning at each origin and going to each destination for each minute
-np.random.seed(42)
-cars_spawned_each_minute = {} # dictionary with structure 'origin → destination : [#cars spawned at t=0 in origin going to destination, #cars spawned at t=1 in ..., ...]'
-for origin_destination, fraction_of_cars in travel_matrix.items():
-    cars_spawned_each_minute[origin_destination] = np.round(np.random.normal(total_cars_spawned_each_minute * fraction_of_cars, car_distribution_std, num_minutes)).astype(int)
-
-print(f"The number of cars spawned between each origin and destination {cars_spawned_each_minute}")
-
-# To prevent negative spawning numbers
-for origin_destination, cars_spawned in cars_spawned_each_minute.items():
-    for t in range(num_minutes):
-        if cars_spawned[t] < 0:
-            cars_spawned_each_minute[origin_destination][t] = 0
-
 # Initialize data for cars
 cars = []
-car_id = 0
-for minute in range(num_minutes):
-    for origin_destination, cars_spawned_over_time in cars_spawned_each_minute.items():
-        for _ in range(cars_spawned_over_time[minute]):
-            car = {
-                "id": car_id, 
-                "origin": origin_destination.split(" → ")[0], 
-                "destination": origin_destination.split(" → ")[1], 
+
+car1 = {
+                "id": 0, 
+                "origin": "City 1", 
+                "destination": "City 2", 
                 "optimal path": None, 
                 "optimal travel time": None, 
-                "time spawned": minute, 
+                "time spawned": 0, 
                 "time arrived": None, 
                 "active": False, 
                 "location": None, 
                 "time entered last edge": None, 
                 "finished edge": False,
                 "next edge": None
-                } 
-            cars.append(car)
-            car_id += 1
+                }
 
-cars, edges = simulate_A_star(nodes, edges, cars, alpha, beta, sigma, num_minutes, warmup_steps, distance_matrix, heuristic_constant)
-print(cars[10:13])
+cars.append(car1)
+
+optimal_path_car1, travel_time = determine_optimal_route(car1, nodes, edges, 0, heuristic_constant, distance_matrix)
+# print(optimal_path_car1)
