@@ -17,8 +17,13 @@ def add_properties_to_edges(edges, l_car, d_spacing, num_minutes):
         tt_0 = (length / speed_limit) * (60 / 1000)  # minutes
         properties["tt_0"] = tt_0
         properties["capacity"] = int(properties["lanes"] * properties["length"] / (l_car + d_spacing))
-        properties["cars on edge"] = [0 for minute in range(num_minutes)] # list of the amount of cars occupying the edge at each time
-        properties["travel time"] = [tt_0 for minute in range(num_minutes)] # list of the (expected) travel time on the edge at each time
+        properties["cars on edge"] = [0 for minute in range(num_minutes + 1000)] # list of the amount of cars occupying the edge at each time
+        properties["travel time"] = [tt_0 for minute in range(num_minutes + 1000)] # list of the (expected) travel time on the edge at each time
+
+# Change the capacity of each edge if the total number of cars in the simulation is reduced
+def change_capacity(edges, reduction_factor):
+    for edge, properties in edges.items():
+        properties["capacity"] = int(reduction_factor * properties["capacity"])
 
 ## Functions that print simulation data
 def print_nodes(nodes):
