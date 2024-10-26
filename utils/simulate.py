@@ -54,7 +54,7 @@ def simulate_and_visualize(cars, edges, node_positions, num_minutes, warmup_step
 
             # Choose the next edge if the car is at a node
             if car["location"] in [node for node in all_nodes if node not in [ending_city]]:
-                next_edge = choose_next_edge(car["location"], vehicle_counts, edges, cars)
+                next_edge = choose_next_edge(car["location"], vehicle_counts, edges, cars, all_nodes, starting_city, ending_city)
 
                 if not next_edge:
                     continue

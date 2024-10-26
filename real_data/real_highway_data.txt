@@ -136,7 +136,7 @@ Harlingen - Leeuwarden: 2x2 lanes : 18.3
 A32:
 Meppel - Steenwijk: 2x2 lanes : 13.2
 Steenwijk - Heerenveen: 2x2 lanes : 23.8
-Heerenveen- Leeuwarden: 2x2 lanes : 23.9
+Heerenveen - Leeuwarden: 2x2 lanes : 23.9
 
 A35:
 Enschede - Hengelo: 2x2 lanes : 13.6
@@ -157,7 +157,7 @@ Leiden - Nieuw-Vennep: 2x2 lanes : 17.8
 A50:
 Eindhoven - Oss: 2x2 lanes : 35.9
 Oss - Ewijk: 2x2 lanes : 16.7
-Ewijk- Arnhem: 2x2 lanes : 21.2
+Ewijk - Arnhem: 2x2 lanes : 21.2
 Arnhem - Apeldoorn: 2x2 lanes : 31.2
 Apeldoorn - Zwolle: 2x2 lanes : 32.3
 
@@ -189,7 +189,7 @@ Venlo - Duitsland: 2x2 lanes : 4.2
 A73:
 Ewijk - Nijmegen: 2x2 lanes : 6.6
 Nijmegen - Boxmeer: 2x2 lanes : 20.3
-Boxmeer- Venlo: 2x2 lanes : 35.3
+Boxmeer - Venlo: 2x2 lanes : 35.3
 Venlo - Roermond: 2x2 lanes : 28.4
 Roermond - Echt: 2x2 lanes : 13.3
 

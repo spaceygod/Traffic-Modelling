@@ -7,14 +7,14 @@ def calculate_rt_i(arrival_next_node, arrived_at_last_node):
     return arrival_next_node - arrived_at_last_node
 
 # Optimized Probability function using the defined formula
-def compute_edge_probability(outgoing_edges, vehicle_counts, edges, cars):
+def compute_edge_probability(outgoing_edges, vehicle_counts, edges, cars, all_nodes, starting_city, ending_city):
     probability_numerators = []
     probability_denominator_sum = 0
 
     # Group cars by their current edge to avoid filtering multiple times
     cars_by_edge = {edge: [] for edge in outgoing_edges}
     for car in cars:
-        if car["location"] in ["A", "B", "C", "D", "E"]:
+        if car["location"] in [node for node in all_nodes if node not in [starting_city, ending_city]]:
             if car["was_on_route"] in outgoing_edges:
                 cars_by_edge[car["was_on_route"]].append(car)
         elif car["location"] in outgoing_edges:
@@ -50,7 +50,7 @@ def compute_edge_probability(outgoing_edges, vehicle_counts, edges, cars):
     return normalized_probabilities
 
 # Function to choose the next edge based on the probabilities
-def choose_next_edge(location, vehicle_counts, edges, cars):
+def choose_next_edge(location, vehicle_counts, edges, cars, all_nodes, starting_city, ending_city):
     # Find all outgoing edges from the current location
     outgoing_edges = [edge for edge in edges if edge.startswith(f"{location} →")]
     
@@ -62,14 +62,14 @@ def choose_next_edge(location, vehicle_counts, edges, cars):
         return False
 
     # Compute probabilities for each outgoing edge
-    probabilities = compute_edge_probability(outgoing_edges, vehicle_counts, edges, cars)
+    probabilities = compute_edge_probability(outgoing_edges, vehicle_counts, edges, cars, all_nodes, starting_city, ending_city)
     
     # Choose an edge based on the computed probabilities
     next_edge = np.random.choice(outgoing_edges, p=probabilities)
     return next_edge
 
 def travel_time_bpr(tt_0, N_e, C_e, alpha, beta, sigma):
-    return tt_0 * (1 + alpha * (N_e / C_e) ** beta) + np.random.normal(0, sigma**2)
+    return max(0, tt_0 * (1 + alpha * (N_e / C_e) ** beta) + np.random.normal(0, sigma**2)) # The max is to avoid negative travel times
 
 # Calculate the base travel time tt_0(e) for each edge (so we just add tt_0 and capacity to the edge dictionary as they only have to be calculated once) and the capacity of each edge
 def add_properties_to_edges(edges, l_car, d_spacing):
