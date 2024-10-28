@@ -90,6 +90,7 @@ def print_cars(cars, range):
         print(f"{'Destination:':<25} {car['destination']}")
         print(f"{'Optimal Path:':<25} {car['optimal path']}")
         print(f"{'Optimal Travel Time:':<25} {car['optimal travel time']}")
+        print(f"{'Trajectory:':<25} {car['trajectory']}")
         print(f"{'Time Spawned:':<25} {car['time spawned']}")
         print(f"{'Time Arrived:':<25} {car['time arrived']}")
         print(f"{'Active:':<25} {car['active']}")
@@ -198,3 +199,13 @@ def determine_optimal_route(car, nodes, edges, time, heuristic_constant, distanc
     # If the queue is empty, no path to the destination was found
     return None, None
 
+# Find the node after a certain node in the trajectory
+def find_next_node(node_list, target_node):
+    for i in range(len(node_list) - 1):
+        if node_list[i][0] == target_node:
+            return node_list[i + 1][0]
+    return None  # Returns None if target_node is not found or is the last node
+
+# Converting the node database of the form {node: {coordinates: ..., population}} to {node: coordinates}
+def convert_nodes(nodes):
+    return {node: nodes[node]["coordinates"] for node in nodes} 

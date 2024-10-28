@@ -1,4 +1,5 @@
 import numpy as np
+from utils.functional import travel_time_bpr
 
 # Run modified A* algorithm
 def run_A_mod(nodes, edges, car, heuristic_constant, distance_matrix, num_minutes):
@@ -24,7 +25,7 @@ def run_A_mod(nodes, edges, car, heuristic_constant, distance_matrix, num_minute
             queue = iterate_A_mod(queue, nodes, edges, car, heuristic_constant, distance_matrix, num_minutes)
 
     # If the queue is empty, no path to the destination was found
-    return None, None
+    return None
 
 # Iterate the modified A* algorithm
 def iterate_A_mod(current_queue, nodes, edges, car, heuristic_constant, distance_matrix, num_minutes):
@@ -69,14 +70,15 @@ def iterate_A_mod(current_queue, nodes, edges, car, heuristic_constant, distance
     return current_queue
 
 # Update the number of cars on each edge in the future based on the trajectory
-def update_future_edge_occupation(edges, trajectory):
+def update_future_edges(edges, trajectory, alpha, beta, sigma):
     
     # Iterate over all nodes in the trajectory
     for i in range(len(trajectory) - 1):
         edge = trajectory[i][0] + " → " + trajectory[i + 1][0] # the edge between the two nodes
-        times_on_edge = list(range(trajectory[i][1], trajectory[i + 1][1])) # the times the car was on this edge
+        times_on_edge = list(range(round(trajectory[i][1]), int(trajectory[i + 1][1]))) # the times the car was on this edge
 
         # Update the number of cars on this edge for each time
         for time in times_on_edge:
             edges[edge]["cars on edge"][time] += 1
+            edges[edge]["travel time"][time] = travel_time_bpr(edges[edge]["tt_0"], edges[edge]["cars on edge"][time], edges[edge]["capacity"], alpha, beta, sigma)
         

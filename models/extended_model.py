@@ -5,8 +5,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import numpy as np
 import math
 from utils.functional_extended import add_properties_to_nodes, add_properties_to_edges, print_nodes, print_edges, print_distance_matrix, print_travel_matrix, print_cars_spawned_each_minute, print_cars, change_capacity
-from utils.simulate_extended import simulate_A_star, iterate_A_star, determine_optimal_route
-from utils.modified_A_star import run_A_mod
+from utils.simulate_extended import simulate_A_star, iterate_A_star, determine_optimal_route, simulate_A_mod
+from utils.modified_A_star import run_A_mod, update_future_edges
 
 # Parameters for BPR function
 alpha = 0.15
@@ -16,7 +16,7 @@ l_car = 4.5 # Length of a car in meters
 d_spacing = 55 # Minimum safe spacing between cars in meters
 
 # Simulation settings
-num_minutes = 50
+num_minutes = 10
 warmup_steps = 0
 total_cars_spawned_each_minute = 1
 car_distribution_std = 1.5
@@ -123,23 +123,24 @@ for minute in range(num_minutes):
             car_id += 1
 
 # Simulate the A* algorithm
-# cars_A_star, edges_A_star = simulate_A_star(nodes, edges, cars, alpha, beta, sigma, num_minutes, distance_matrix, heuristic_constant)
+cars_A_star, edges_A_star = simulate_A_star(nodes, edges, cars, alpha, beta, sigma, num_minutes, distance_matrix, heuristic_constant)
 
 # Test the modified A* algorithm
-test_car = {
-    "id": 0, 
-    "origin": "City 1", 
-    "destination": "City 2", 
-    "optimal path": None, 
-    "optimal travel time": None, 
-    "trajectory": None, # list of the form [(first node on path, time entered edge after node), (second node on path, time entered edge after node), ...] (only accessed in modified A* simulation)
-    "time spawned": 10, 
-    "time arrived": None, 
-    "active": False, 
-    "location": None, 
-    "time entered last edge": None, 
-    "finished edge": False,
-    "next edge": None
-}
-optimal_trajectory = run_A_mod(nodes, edges, test_car, heuristic_constant, distance_matrix, num_minutes)
-print(optimal_trajectory)
+# test_car = {
+#     "id": 0, 
+#     "origin": "City 1", 
+#     "destination": "City 2", 
+#     "optimal path": None, 
+#     "optimal travel time": None, 
+#     "trajectory": None, # list of the form [(first node on path, time entered edge after node), (second node on path, time entered edge after node), ...] (only accessed in modified A* simulation)
+#     "time spawned": 10, 
+#     "time arrived": None, 
+#     "active": False, 
+#     "location": None, 
+#     "time entered last edge": None, 
+#     "finished edge": False,
+#     "next edge": None
+# }
+
+# Simulate the modified A* algorithm
+cars_A_mod, edges_A_mod, future_edges_A_mod = simulate_A_mod(nodes, edges, cars, alpha, beta, sigma, num_minutes, distance_matrix, heuristic_constant)
