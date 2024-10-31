@@ -5,8 +5,11 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import numpy as np
 import math
 import copy
+import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
 from utils.functional import travel_time_bpr
-from utils.functional_extended import iterate_A_star, determine_optimal_route, find_next_node
+from utils.visualization_extended import initialize_plot, update_plot
+from utils.functional_extended import iterate_A_star, determine_optimal_route, find_next_node, convert_nodes
 from utils.modified_A_star import run_A_mod, update_future_edges
 
 # Each iteration of the simulation the following things are done:
@@ -25,6 +28,12 @@ def simulate_A_star(nodes, edges, cars, alpha, beta, sigma, num_minutes, distanc
     # Cars and edges after the simulation; a copy is made so that the original cars and edges are not changed and can be used for the normal A* simulation
     new_cars = copy.deepcopy(cars) 
     new_edges = copy.deepcopy(edges)
+
+    # Converting the nodes database from the format used in the simulation to the format used in the visualization
+    nodes_visualization = convert_nodes(nodes)
+
+    # Initializing the visualization
+    fig, ax, edge_texts, timestep_text, edge_lines = initialize_plot(edges, nodes_visualization)
 
     # Iteration of the simulation
     for time in range(num_minutes):
@@ -113,6 +122,12 @@ def simulate_A_star(nodes, edges, cars, alpha, beta, sigma, num_minutes, distanc
         ## Based on the number of cars on each edge, calculate the travel time of each edge
         for edge, properties in new_edges.items():
             properties["travel time"][time] = travel_time_bpr(properties["tt_0"], properties["cars on edge"][time], properties["capacity"], alpha, beta, sigma)
+
+        # Determining the vehicle_counts dictionary used in the visualization
+        vehicle_counts = {edge: np.array([edges[edge]["cars on edge"][time]]) for edge in edges}
+
+        # Update the visualization
+        update_plot(time, edges, vehicle_counts, edge_texts, timestep_text, num_minutes, edge_lines)
 
     return new_cars, new_edges
 
