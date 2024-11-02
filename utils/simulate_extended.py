@@ -1,5 +1,6 @@
 import sys
 import os
+# import tqdm
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import numpy as np
@@ -24,7 +25,7 @@ from utils.modified_A_star import run_A_mod, update_future_edges
 #
 # The simulation returns the travel time of each car. Cars that did not reach their destination and cars spawned during the warmup steps are ignored.
 
-def simulate_A_star(nodes, edges, cars, alpha, beta, sigma, num_minutes, distance_matrix, heuristic_constant):
+def simulate_A_star(nodes, edges, cars, alpha, beta, sigma, num_minutes, distance_matrix, heuristic_constant, animate=True):
     # Cars and edges after the simulation; a copy is made so that the original cars and edges are not changed and can be used for the normal A* simulation
     new_cars = copy.deepcopy(cars) 
     new_edges = copy.deepcopy(edges)
@@ -35,9 +36,7 @@ def simulate_A_star(nodes, edges, cars, alpha, beta, sigma, num_minutes, distanc
     # Initializing the visualization
     fig, ax, edge_texts, timestep_text, edge_lines = initialize_plot(edges, nodes_visualization)
 
-    # Iteration of the simulation
-    for time in range(num_minutes):
-
+    def update(time):
         ## Removing all cars that have reached their destination
         for car in new_cars:
             if car["location"] != None:
@@ -124,10 +123,19 @@ def simulate_A_star(nodes, edges, cars, alpha, beta, sigma, num_minutes, distanc
             properties["travel time"][time] = travel_time_bpr(properties["tt_0"], properties["cars on edge"][time], properties["capacity"], alpha, beta, sigma)
 
         # Determining the vehicle_counts dictionary used in the visualization
-        vehicle_counts = {edge: np.array([edges[edge]["cars on edge"][time]]) for edge in edges}
+        vehicle_counts = {edge: [new_edges[edge]["cars on edge"][time]] for edge in edges}
 
         # Update the visualization
         update_plot(time, edges, vehicle_counts, edge_texts, timestep_text, num_minutes, edge_lines)
+
+    if animate:
+        # Animate the plot over time
+        anim = FuncAnimation(fig, update, frames=range(num_minutes), repeat=False, interval=100)
+        plt.show()
+    # else:
+    #     # Run the simulation without animation using tqdm for a progress bar
+    #     for t in tqdm(range(num_minutes), desc=f"Simulating"):
+    #         update(t)
 
     return new_cars, new_edges
 

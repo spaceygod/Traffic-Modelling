@@ -16,9 +16,9 @@ l_car = 4.5 # Length of a car in meters
 d_spacing = 55 # Minimum safe spacing between cars in meters
 
 # Simulation settings
-num_minutes = 10
+num_minutes = 200
 warmup_steps = 0
-total_cars_spawned_each_minute = 1
+total_cars_spawned_each_minute = 200
 car_distribution_std = 1.5
 heuristic_constant = 1
 
@@ -47,14 +47,14 @@ for node_A, properties_A in nodes.items():
 # Define the road network (length in meters, speed limit in km/h, number of lanes)
 edges = {
     "City 1 → A": {"length": 30000, "speed_limit": 100, "lanes": 2},
-    "City 1 → B": {"length": 50000, "speed_limit": 100, "lanes": 2},
+    "City 1 → B": {"length": 30000, "speed_limit": 100, "lanes": 2},
     "A → C": {"length": 40000, "speed_limit": 100, "lanes": 2},
-    "B → C": {"length": 60000, "speed_limit": 100, "lanes": 2},
+    "B → C": {"length": 40000, "speed_limit": 100, "lanes": 2},
     "C → D": {"length": 20000, "speed_limit": 100, "lanes": 2},
     "C → E": {"length": 30000, "speed_limit": 100, "lanes": 2},
-    "C → City 2": {"length": 20000, "speed_limit": 100, "lanes": 1},
-    "D → City 2": {"length": 10000, "speed_limit": 100, "lanes": 2},
-    "E → City 2": {"length": 5000, "speed_limit": 100, "lanes": 2},
+    "C → City 2": {"length": 100000, "speed_limit": 100, "lanes": 1},
+    "D → City 2": {"length": 100000000, "speed_limit": 100, "lanes": 2},
+    "E → City 2": {"length": 100000000, "speed_limit": 100, "lanes": 2},
     "City 2 → City 1": {"length": 60000, "speed_limit": 100, "lanes": 2}
 }
 

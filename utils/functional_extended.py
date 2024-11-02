@@ -110,10 +110,10 @@ def iterate_A_star(current_route, current_queue, nodes, edges, time, heuristic_c
     updated_queue = current_queue
 
     # Printing the iteration
-    print("=" * 40)
-    print(f"Iterating A* on {last_node_of_path}")
-    print(f"{'Path:':<25} {current_path}")
-    print(f"{'Travel time:':<25} {current_travel_time}")
+    # print("=" * 40)
+    # print(f"Iterating A* on {last_node_of_path}")
+    # print(f"{'Path:':<25} {current_path}")
+    # print(f"{'Travel time:':<25} {current_travel_time}")
 
     # For each neighbor of the last node of the route, make a new route which is the old route plus this neighbor
     neighboring_nodes = nodes[last_node_of_path]["neighboring nodes"] # list of the neighboring nodes of the last node of the route that is currently checked
@@ -132,12 +132,12 @@ def iterate_A_star(current_route, current_queue, nodes, edges, time, heuristic_c
             }
 
         # Printing the new route found
-        print("-" * 40)
-        print(f"Extended route from {new_path[-2]} to its neighbor {new_path[-1]}")
-        print(f"{'New path:':<25} {new_route['path']}")
-        print(f"{'New travel time:':<25} {new_route['travel time']}")
-        print(f"{'New heuristic:':<25} {new_route['heuristic']}")
-        print(f"{'New total cost:':<25} {new_route['total cost']}")
+        # print("-" * 40)
+        # print(f"Extended route from {new_path[-2]} to its neighbor {new_path[-1]}")
+        # print(f"{'New path:':<25} {new_route['path']}")
+        # print(f"{'New travel time:':<25} {new_route['travel time']}")
+        # print(f"{'New heuristic:':<25} {new_route['heuristic']}")
+        # print(f"{'New total cost:':<25} {new_route['total cost']}")
 
         updated_queue.append(new_route)
     
@@ -157,15 +157,15 @@ def iterate_A_star(current_route, current_queue, nodes, edges, time, heuristic_c
             unique_queue.append(route)  # Keep only the lowest-cost route to each node
             seen_nodes.add(last_node)
 
-    print("-" * 40)
-    print("-" * 40)
-    print(f"New queue")
-    for route in unique_queue:
-        print(f"{'Path:':<25} {route['path']}")
-        print(f"{'Travel time:':<25} {route['travel time']}")
-        print(f"{'Heuristic:':<25} {route['heuristic']}")
-        print(f"{'Total cost:':<25} {route['total cost']} \n")
-    print("=" * 40)
+    # print("-" * 40)
+    # print("-" * 40)
+    # print(f"New queue")
+    # for route in unique_queue:
+    #     print(f"{'Path:':<25} {route['path']}")
+    #     print(f"{'Travel time:':<25} {route['travel time']}")
+    #     print(f"{'Heuristic:':<25} {route['heuristic']}")
+    #     print(f"{'Total cost:':<25} {route['total cost']} \n")
+    # print("=" * 40)
 
     return unique_queue
 
