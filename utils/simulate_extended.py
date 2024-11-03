@@ -3,14 +3,12 @@ import os
 # import tqdm
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import numpy as np
-import math
 import copy
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 from utils.functional import travel_time_bpr
 from utils.visualization_extended import initialize_plot, update_plot
-from utils.functional_extended import iterate_A_star, determine_optimal_route, find_next_node, convert_nodes
+from utils.functional_extended import determine_optimal_route, find_next_node, convert_nodes, save_simulation_results
 from utils.modified_A_star import run_A_mod, update_future_edges
 
 # Each iteration of the simulation the following things are done:
@@ -136,6 +134,9 @@ def simulate_A_star(nodes, edges, cars, alpha, beta, sigma, num_minutes, distanc
     #     # Run the simulation without animation using tqdm for a progress bar
     #     for t in tqdm(range(num_minutes), desc=f"Simulating"):
     #         update(t)
+
+    # Call to save the simulation results after the loop ends
+    save_simulation_results(new_cars, nodes, new_edges, distance_matrix, heuristic_constant)
 
     return new_cars, new_edges
 
