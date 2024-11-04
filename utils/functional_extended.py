@@ -19,8 +19,8 @@ def add_properties_to_edges(edges, l_car, d_spacing, num_minutes):
         tt_0 = (length / speed_limit) * (60 / 1000)  # minutes
         properties["tt_0"] = tt_0
         properties["capacity"] = int(properties["lanes"] * properties["length"] / (l_car + d_spacing))
-        properties["cars on edge"] = [0 for minute in range(num_minutes + 1000)] # list of the amount of cars occupying the edge at each time
-        properties["travel time"] = [tt_0 for minute in range(num_minutes + 1000)] # list of the (expected) travel time on the edge at each time
+        properties["cars on edge"] = [0 for minute in range(num_minutes + 100000)] # list of the amount of cars occupying the edge at each time
+        properties["travel time"] = [tt_0 for minute in range(num_minutes + 100000)] # list of the (expected) travel time on the edge at each time
 
 # Change the capacity of each edge if the total number of cars in the simulation is reduced
 def change_capacity(edges, reduction_factor):
@@ -126,7 +126,7 @@ def iterate_A_star(current_route, current_queue, nodes, edges, time, heuristic_c
 
         # Increase the cost due to travel time whenever the edge is full (so that the car would have to wait)
         if edges[next_edge]['cars on edge'][time] >= edges[next_edge]['capacity'] - 2:
-            new_travel_time = current_travel_time + edges[next_edge]['travel time'][time] + 100000
+            new_travel_time = current_travel_time + edges[next_edge]['travel time'][time] + 1000
         else:
             new_travel_time = current_travel_time + edges[next_edge]["travel time"][time]
         
