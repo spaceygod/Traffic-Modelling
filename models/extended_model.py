@@ -7,6 +7,7 @@ import math
 from utils.functional_extended import add_properties_to_nodes, add_properties_to_edges, print_nodes, print_edges, print_distance_matrix, print_travel_matrix, print_cars_spawned_each_minute, print_cars, change_capacity
 from utils.simulate_extended import simulate_A_star, iterate_A_star, determine_optimal_route, simulate_A_mod
 from utils.modified_A_star import run_A_mod, update_future_edges
+from real_data.parse_edges import parse_highway_data
 
 # Parameters for BPR function
 alpha = 0.15
@@ -18,7 +19,7 @@ d_spacing = 55 # Minimum safe spacing between cars in meters
 # Simulation settings
 num_minutes = 200
 warmup_steps = 0
-total_cars_spawned_each_minute = 200
+total_cars_spawned_each_minute = 10
 car_distribution_std = 1.5
 heuristic_constant = 1
 

@@ -1,4 +1,5 @@
 import numpy as np
+import copy
 
 # Add neighboring nodes to each node
 def add_properties_to_nodes(nodes, edges):
@@ -209,3 +210,15 @@ def find_next_node(node_list, target_node):
 # Converting the node database of the form {node: {coordinates: ..., population}} to {node: coordinates}
 def convert_nodes(nodes):
     return {node: nodes[node]["coordinates"] for node in nodes} 
+
+# Switch x and y coordinates of locations in nodes
+def switch_x_y(nodes):
+    new_nodes = copy.deepcopy(nodes)
+
+    for node, properties in new_nodes.items():
+        x = properties['coordinates'][0]
+        y = properties['coordinates'][1]
+
+        new_nodes[node]['coordinates'] = (y, x)
+
+    return new_nodes

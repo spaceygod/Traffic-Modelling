@@ -1,8 +1,29 @@
-import matplotlib.pyplot as plt
-from matplotlib import cm, colors
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import numpy as np
+import math
+from utils.functional_extended import add_properties_to_nodes, add_properties_to_edges, print_nodes, print_edges, print_distance_matrix, print_travel_matrix, print_cars_spawned_each_minute, print_cars, change_capacity, switch_x_y
+from utils.simulate_extended import simulate_A_star, iterate_A_star, determine_optimal_route, simulate_A_mod
+from utils.modified_A_star import run_A_mod, update_future_edges
+from real_data.parse_edges import parse_highway_data
 
+# Parameters for BPR function
+alpha = 0.15
+beta = 4
+sigma = 0.1
+l_car = 4.5 # Length of a car in meters
+d_spacing = 55 # Minimum safe spacing between cars in meters
+
+# Simulation settings
+num_minutes = 1000
+warmup_steps = 0
+total_cars_spawned_each_minute = 30
+car_distribution_std = 0.0001
+heuristic_constant = 1
+
+# Node positions for plotting
 nodes = {
     "Hoensbroek": {"coordinates": (50.9180, 5.9310), "population": 18860},
     "Lemmer": {"coordinates": (52.8475, 5.7194), "population": 10000},
@@ -36,14 +57,14 @@ nodes = {
     "Diemen": {"coordinates": (52.3392, 4.9622), "population": 32000},
     "Venlo": {"coordinates": (51.3704, 6.1724), "population": 101000},
     "Bergen op Zoom": {"coordinates": (51.4936, 4.2871), "population": 67000},
-    "Apeldoorn": {"coordinates": (52.2112, 5.9699), "population": 165000},
+    "Apeldoorn": {"coordinates": (52.2112, 5.9699), "population": 9165000},
     "Stein": {"coordinates": (50.9725, 5.7707), "population": 25000},
     "Duitsland": {"coordinates": (52.17, 7.10), "population": None},
     "Nijmegen": {"coordinates": (51.8126, 5.8372), "population": 178000},
     "Westpoort": {"coordinates": (52.4056, 4.8167), "population": None},
     "Maasvlakte": {"coordinates": (51.9554, 4.0236), "population": None},
     "Moerdijk": {"coordinates": (51.7031, 4.6139), "population": 7400},
-    "Amsterdam": {"coordinates": (52.3676, 4.9041), "population": 931000},
+    "Amsterdam": {"coordinates": (52.3676, 4.9041), "population": 9931000},
     "Zoetermeer": {"coordinates": (52.0570, 4.4931), "population": 125000},
     "Doetinchem": {"coordinates": (51.9654, 6.2880), "population": 57000},
     "Heerlen": {"coordinates": (50.8882, 5.9795), "population": 88000},
@@ -62,7 +83,7 @@ nodes = {
     "Berkel-Enschot": {"coordinates": (51.5816, 5.1666), "population": 11000},
     "Vught": {"coordinates": (51.6558, 5.2873), "population": 27000},
     "Wassenaar": {"coordinates": (52.1397, 4.4019), "population": 26000},
-    "Groningen": {"coordinates": (53.2194, 6.5665), "population": 235000},
+    "Groningen": {"coordinates": (53.2194, 6.5665), "population": 9235000},
     "Hoofddorp": {"coordinates": (52.3061, 4.6907), "population": 78590},
     "Amersfoort": {"coordinates": (52.1560, 5.3878), "population": 159130},
     "Roosendaal": {"coordinates": (51.5306, 4.4654), "population": 77700},
@@ -89,7 +110,7 @@ nodes = {
     "Hengelo": {"coordinates": (52.2659, 6.7930), "population": 81709},
     "Goes": {"coordinates": (51.5047, 3.8883), "population": 38435},
     "Middelburg": {"coordinates": (51.4988, 3.6136), "population": 48732},
-    "Rotterdam": {"coordinates": (51.9225, 4.47917), "population": 655468},
+    "Rotterdam": {"coordinates": (51.9225, 4.47917), "population": 9655468},
     "Enschede": {"coordinates": (52.2215, 6.8937), "population": 159286},
     "Joure": {"coordinates": (52.9633, 5.8051), "population": 13110},
     "Hoogeveen": {"coordinates": (52.7221, 6.4866), "population": 55949},
@@ -109,84 +130,106 @@ nodes = {
     "Breda": {"coordinates": (51.5719, 4.7683), "population": 184409}
 }
 
+# Switching x and y coordinates of all nodes
+nodes = switch_x_y(nodes)
 
-def initialize_plot(edges, node_positions, bg_image=None, lat_min=None, lat_max=None, lon_min=None, lon_max=None):
-    edge_texts = {}
-    edge_lines = {}
+# Create a dictionary containing the Euclidean distance between each pair of nodes
+distance_matrix = {}
+for node_A, properties_A in nodes.items():
+    for node_B, properties_B in nodes.items():
+        if node_A == node_B:
+            distance_matrix[node_A + " → " + node_B] = 0
+        elif node_B + " → " + node_A in distance_matrix:
+            distance_matrix[node_A + " → " + node_B] = distance_matrix[node_B + " → " + node_A]
+        else:
+            distance_matrix[node_A + " → " + node_B] = math.sqrt((properties_A["coordinates"][0] - properties_B["coordinates"][0])**2 + (properties_A["coordinates"][1] - properties_B["coordinates"][1])**2)
 
-    # Filter out cities with None population, but include België and Duitsland
-    valid_nodes = {city: info for city, info in nodes.items() if info['population'] is not None or city in ['België', 'Duitsland']}
-    top_cities = sorted(valid_nodes.items(), key=lambda item: item[1]['population'] if item[1]['population'] is not None else 0, reverse=True)[:30]
-    top_city_names = {city: info['coordinates'] for city, info in top_cities}
+# Define the road network (length in meters, speed limit in km/h, number of lanes)
+edges = parse_highway_data('./real_data/real_highway_data.txt')
 
-    if bg_image is None:
-        fig, ax = plt.subplots(figsize=(10, 12))
-        ax.set_xlim(3.5, 7.7)
-        ax.set_ylim(50.5, 54)
-        fig.patch.set_facecolor('black')
-        ax.set_facecolor('black')
+# Add properties to nodes
+add_properties_to_nodes(nodes, edges)
 
-        ax.set_title("Real-Time Simulation of Car Movements", color='white', fontsize=14)
+# Add properties to edges
+add_properties_to_edges(edges, l_car, d_spacing, num_minutes)
 
-        # Plot all nodes (cities) with light gray color
-        for node, pos in nodes.items():
-            ax.plot(pos['coordinates'][1], pos['coordinates'][0], 'o', markersize=8, color='lightgray')
-            # Highlight only top cities with their names
-            if node in top_city_names:
-                ax.text(pos['coordinates'][1], pos['coordinates'][0] + 0.05, node, fontsize=6, ha='center', va='bottom', color='white')
-            elif node in ['België', 'Duitsland']:  # Always show names for these two
-                ax.text(pos['coordinates'][1], pos['coordinates'][0] + 0.05, node, fontsize=6, ha='center', va='bottom', color='yellow')
+# Reduce the capacity of each edge based on the number of cars in the network
+change_capacity(edges, 0.001)
 
-        # Initialize edge lines (if edges are provided)
-        for edge in edges:
-            start_node, end_node = edge.split(" → ")
-            if start_node in nodes and end_node in nodes:  # Check for existing nodes
-                start_pos, end_pos = nodes[start_node]['coordinates'], nodes[end_node]['coordinates']
-                mid_pos = ((start_pos[1] + end_pos[1]) / 2, (start_pos[0] + end_pos[0]) / 2)
-                line, = ax.plot([start_pos[1], end_pos[1]], [start_pos[0], end_pos[0]], color='green', linestyle='-', linewidth=1)
-                edge_lines[edge] = line
-                edge_texts[edge] = ax.text(mid_pos[0], mid_pos[1], '', fontsize=8, color='purple')
-    else:
-        fig, ax = plt.subplots(figsize=(10, 12))
-        ax.set_xlim([lon_min, lon_max])
-        ax.set_ylim([lat_min, lat_max])
-        ax.imshow(bg_image, extent=[lon_min, lon_max, lat_min, lat_max], aspect='auto')
-        ax.set_title("Real-Time Simulation of Car Movements", color='white', fontsize=14)
+## Create a dictionary containing what fraction of cars will travel from each node A to each node B
+travel_matrix = {}
 
-        for node, pos in nodes.items():
-            ax.plot(pos['coordinates'][1], pos['coordinates'][0], 'o', markersize=8, color='lightgray')
-            if node in top_city_names:
-                ax.text(pos['coordinates'][1], pos['coordinates'][0] + 0.05, node, fontsize=6, ha='center', va='bottom', color='white')
-            elif node in ['België', 'Duitsland']:
-                ax.text(pos['coordinates'][1], pos['coordinates'][0] + 0.05, node, fontsize=6, ha='center', va='bottom', color='yellow')
+# Calculating the total population
+total_population = 0
+for node, properties in nodes.items():
+    if properties["population"] != None:
+        total_population += properties["population"]
 
-        for edge in edges:
-            start_node, end_node = edge.split(" → ")
-            if start_node in nodes and end_node in nodes:
-                start_pos, end_pos = nodes[start_node]['coordinates'], nodes[end_node]['coordinates']
-                mid_pos = ((start_pos[1] + end_pos[1]) / 2, (start_pos[0] + end_pos[0]) / 2)
-                line, = ax.plot([start_pos[1], end_pos[1]], [start_pos[0], end_pos[0]], color='green', linestyle='-', linewidth=1)
-                edge_lines[edge] = line
-                edge_texts[edge] = ax.text(mid_pos[0], mid_pos[1], '', fontsize=8, color='purple')
+# Filling in the travel matrix
+for origin, origin_properties in nodes.items():
+    for destination, destination_properties in nodes.items():
+        if origin == destination:
+            continue
+        elif origin_properties["population"] == None or destination_properties["population"] == None:
+            continue
+        else:
+            travel_matrix[origin + " → " + destination] = (origin_properties["population"] / total_population) * (destination_properties["population"] / (total_population - origin_properties["population"]))
 
-    timestep_text = ax.text(0.5, 0.98, '', transform=ax.transAxes, fontsize=10, color='white', ha='center', verticalalignment='top')
+## Sample the number of cars spawning at each origin and going to each destination for each minute
+np.random.seed(42)
+cars_spawned_each_minute = {} # dictionary with structure 'origin → destination : [#cars spawned at t=0 in origin going to destination, #cars spawned at t=1 in ..., ...]'
+for origin_destination, fraction_of_cars in travel_matrix.items():
+    cars_spawned_each_minute[origin_destination] = np.round(np.random.normal(total_cars_spawned_each_minute * fraction_of_cars, car_distribution_std, num_minutes)).astype(int)
 
+# To prevent negative spawning numbers
+for origin_destination, cars_spawned in cars_spawned_each_minute.items():
+    for t in range(num_minutes):
+        if cars_spawned[t] < 0:
+            cars_spawned_each_minute[origin_destination][t] = 0
 
-    return fig, ax, edge_texts, timestep_text, edge_lines
+# Initialize data for cars
+cars = []
+car_id = 0
+for minute in range(num_minutes):
+    for origin_destination, cars_spawned_over_time in cars_spawned_each_minute.items():
+        for _ in range(cars_spawned_over_time[minute]):
+            car = {
+                "id": car_id, 
+                "origin": origin_destination.split(" → ")[0], 
+                "destination": origin_destination.split(" → ")[1], 
+                "optimal path": None, 
+                "optimal travel time": None, 
+                "trajectory": None, # list of the form [(first node on path, time entered edge after node), (second node on path, time entered edge after node), ...] (only accessed in modified A* simulation)
+                "time spawned": minute, 
+                "time arrived": None, 
+                "active": False, 
+                "location": None, 
+                "time entered last edge": None, 
+                "finished edge": False,
+                "next edge": None
+                } 
+            cars.append(car)
+            car_id += 1
 
-# The update_plot function remains the same
-def update_plot(t, edges, vehicle_counts, edge_texts, timestep_text, num_minutes, edge_lines):
-    cmap = cm.get_cmap('RdYlGn_r')
-    norm = colors.Normalize(vmin=0, vmax=1)
+# Simulate the A* algorithm
+cars_A_star, edges_A_star = simulate_A_star(nodes, edges, cars, alpha, beta, sigma, num_minutes, distance_matrix, heuristic_constant)
 
-    for edge, text in edge_texts.items():
-        num_cars = int(vehicle_counts[edge][0])
-        capacity = edges[edge]["capacity"]
-        congestion = num_cars / capacity if capacity > 0 else 0
-        congestion = min(max(congestion, 0), 1)
+# Test the modified A* algorithm
+# test_car = {
+#     "id": 0, 
+#     "origin": "City 1", 
+#     "destination": "City 2", 
+#     "optimal path": None, 
+#     "optimal travel time": None, 
+#     "trajectory": None, # list of the form [(first node on path, time entered edge after node), (second node on path, time entered edge after node), ...] (only accessed in modified A* simulation)
+#     "time spawned": 10, 
+#     "time arrived": None, 
+#     "active": False, 
+#     "location": None, 
+#     "time entered last edge": None, 
+#     "finished edge": False,
+#     "next edge": None
+# }
 
-        # text.set_text(f"{num_cars}/{capacity}")
-        edge_color = cmap(norm(congestion))
-        edge_lines[edge].set_color(edge_color)
-
-    timestep_text.set_text(f"Timestep: {t}/{num_minutes}")
+# Simulate the modified A* algorithm
+# cars_A_mod, edges_A_mod, future_edges_A_mod = simulate_A_mod(nodes, edges, cars, alpha, beta, sigma, num_minutes, distance_matrix, heuristic_constant)

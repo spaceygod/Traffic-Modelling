@@ -69,8 +69,11 @@ def choose_next_edge(location, vehicle_counts, edges, cars, all_nodes, starting_
     return next_edge
 
 def travel_time_bpr(tt_0, N_e, C_e, alpha, beta, sigma):
-    travel_time = max(0, tt_0 * (1 + alpha * (N_e / C_e) ** beta) + np.random.normal(0, sigma**2)) # The max is to avoid negative travel times
-    return travel_time
+    if C_e != 0:
+        travel_time = max(0, tt_0 * (1 + alpha * (N_e / C_e) ** beta) + np.random.normal(0, sigma**2)) # The max is to avoid negative travel times
+        return travel_time
+    else:
+        return float('inf')
 
 # Calculate the base travel time tt_0(e) for each edge (so we just add tt_0 and capacity to the edge dictionary as they only have to be calculated once) and the capacity of each edge
 def add_properties_to_edges(edges, l_car, d_spacing):
