@@ -264,3 +264,13 @@ def save_simulation_results(cars, nodes, edges, distance_matrix, heuristic_const
         writer.writeheader()
         for car in car_data:
             writer.writerow(car)
+
+# Change node population
+def change_population(nodes):
+    new_nodes = copy.deepcopy(nodes)
+
+    for node, properties in new_nodes.items():
+        if properties['population'] != None and properties['population'] <= 200000:
+            new_nodes[node]['population'] = None
+
+    return new_nodes

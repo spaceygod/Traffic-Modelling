@@ -5,7 +5,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import numpy as np
 import math
 import matplotlib.image as mpimg
-from utils.functional_extended import add_properties_to_nodes, add_properties_to_edges, print_nodes, print_edges, print_distance_matrix, print_travel_matrix, print_cars_spawned_each_minute, print_cars, change_capacity, switch_x_y, iterate_A_star
+from utils.functional_extended import add_properties_to_nodes, add_properties_to_edges, print_nodes, print_edges, print_distance_matrix, print_travel_matrix, print_cars_spawned_each_minute, print_cars, change_capacity, switch_x_y, iterate_A_star, change_population
 from utils.simulate_extended import simulate_A_star, determine_optimal_route, simulate_A_mod
 from utils.modified_A_star import run_A_mod, update_future_edges
 from real_data.parse_edges import parse_highway_data
@@ -20,7 +20,7 @@ d_spacing = 55 # Minimum safe spacing between cars in meters
 # Simulation settings
 num_minutes = 1000
 warmup_steps = 0
-total_cars_spawned_each_minute = 40
+total_cars_spawned_each_minute = 10
 car_distribution_std = 0.0001
 heuristic_constant = 1
 
@@ -131,6 +131,9 @@ nodes = {
     "Breda": {"coordinates": (51.5719, 4.7683), "population": 184409}
 }
 
+# Keep only largest populations
+nodes = change_population(nodes)
+
 # Switching x and y coordinates of all nodes
 nodes = switch_x_y(nodes)
 
@@ -155,7 +158,7 @@ add_properties_to_nodes(nodes, edges)
 add_properties_to_edges(edges, l_car, d_spacing, num_minutes)
 
 # Reduce the capacity of each edge based on the number of cars in the network
-change_capacity(edges, 0.02)
+change_capacity(edges, 0.005)
 
 ## Create a dictionary containing what fraction of cars will travel from each node A to each node B
 travel_matrix = {}
@@ -221,7 +224,7 @@ for minute in range(num_minutes):
 # lon_min, lon_max = 3.36, 7.22    # Approx longitude range of the Netherlands
 
 # Simulate the A* algorithm
-# cars_A_star, edges_A_star = simulate_A_star(nodes, edges, cars, alpha, beta, sigma, num_minutes, distance_matrix, heuristic_constant)
+cars_A_star, edges_A_star = simulate_A_star(nodes, edges, cars, alpha, beta, sigma, num_minutes, distance_matrix, heuristic_constant)
 
 # Simulate the modified A* algorithm
 # cars_A_mod, edges_A_mod, future_edges_A_mod = simulate_A_mod(nodes, edges, cars, alpha, beta, sigma, num_minutes, distance_matrix, heuristic_constant)
