@@ -270,7 +270,10 @@ def change_population(nodes):
     new_nodes = copy.deepcopy(nodes)
 
     for node, properties in new_nodes.items():
-        if properties['population'] != None and properties['population'] <= 200000:
-            new_nodes[node]['population'] = None
+        if properties['population'] != None:
+            if properties['population'] <= 200000:
+                new_nodes[node]['population'] = None
+            else:
+                new_nodes[node]['population'] = 1
 
     return new_nodes
