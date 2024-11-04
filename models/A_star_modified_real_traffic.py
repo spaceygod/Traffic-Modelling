@@ -18,10 +18,10 @@ l_car = 4.5 # Length of a car in meters
 d_spacing = 55 # Minimum safe spacing between cars in meters
 
 # Simulation settings
-num_minutes = 60 # 10*60 # 10 hours
-warmup_steps = 10 #3*60 # 3 hours (travel time from farest edges in the netherlands to each other)
-total_cars_spawned_each_minute = 10#00
-car_distribution_std = 1 #50
+num_minutes = 10*60 # 10 hours
+warmup_steps = 2.5*60 # 2.5 hours (travel time from farest edges in the netherlands to each other)
+total_cars_spawned_each_minute = 1500
+car_distribution_std = 50
 heuristic_constant = 1
 
 # Node positions for plotting
