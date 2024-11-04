@@ -112,7 +112,7 @@ def iterate_A_star(current_route, current_queue, nodes, edges, time, heuristic_c
     last_node_of_path = current_path[-1]
     updated_queue = current_queue
 
-    # Printing the iteration
+    # # Printing the iteration
     # print("=" * 40)
     # print(f"Iterating A* on {last_node_of_path}")
     # print(f"{'Path:':<25} {current_path}")
@@ -141,7 +141,7 @@ def iterate_A_star(current_route, current_queue, nodes, edges, time, heuristic_c
             "total cost": new_total_cost
             }
 
-        # Printing the new route found
+        # # Printing the new route found
         # print("-" * 40)
         # print(f"Extended route from {new_path[-2]} to its neighbor {new_path[-1]}")
         # print(f"{'New path:':<25} {new_route['path']}")
@@ -285,7 +285,7 @@ def change_population(nodes):
 
     for node, properties in new_nodes.items():
         if properties['population'] != None:
-            if properties['population'] <= 10000:
+            if properties['population'] <= 200000:
                 new_nodes[node]['population'] = None
             else:
                 new_nodes[node]['population'] = 1
