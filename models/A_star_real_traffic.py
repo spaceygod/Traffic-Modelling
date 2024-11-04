@@ -235,3 +235,6 @@ cars_A_star, edges_A_star = simulate_A_star(nodes, edges, cars, alpha, beta, sig
 
 # Simulate the modified A* algorithm
 # cars_A_mod, edges_A_mod, future_edges_A_mod = simulate_A_mod(nodes, edges, cars, alpha, beta, sigma, num_minutes, distance_matrix, heuristic_constant)
+
+
+print('finished')
