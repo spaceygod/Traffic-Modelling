@@ -66,8 +66,8 @@ starting_city = "City 1"
 ending_city = "City 2"
 
 # Run the simulation and plot the results
-# all_car_reach_times, most_congested_edge = simulate_and_compare(cars, edges, node_positions, num_minutes, warmup_steps, deltas=[1.4, 1.8, 2.2, 2.6, 3.0, 3.4, 3.8, 4.2, 4.6, 5.0], alpha=0.15, beta=4, sigma=2, starting_city=starting_city, ending_city=ending_city)
-all_car_reach_times, most_congested_edge = simulate_and_compare(cars, edges, node_positions, num_minutes, warmup_steps, deltas=[1.4], alpha=0.15, beta=4, sigma=2, starting_city=starting_city, ending_city=ending_city)
+all_car_reach_times, most_congested_edge = simulate_and_compare(cars, edges, node_positions, num_minutes, warmup_steps, deltas=[1.4, 1.8, 2.2, 2.6, 3.0, 3.4, 3.8, 4.2, 4.6, 5.0], alpha=0.15, beta=4, sigma=2, starting_city=starting_city, ending_city=ending_city)
+# all_car_reach_times, most_congested_edge = simulate_and_compare(cars, edges, node_positions, num_minutes, warmup_steps, deltas=[1.4], alpha=0.15, beta=4, sigma=2, starting_city=starting_city, ending_city=ending_city)
 plot_3D_surface(all_car_reach_times)
 plot_scatter_with_correlation(all_car_reach_times)
 
