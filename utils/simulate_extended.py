@@ -47,11 +47,16 @@ def simulate_A_star(nodes, edges, cars, alpha, beta, sigma, num_minutes, distanc
                     car["time arrived"] = time
                     car["active"] = False
                     car["location"] = None
+
+        print("goen through cars")
         
         ## Spawning new cars at their origin and calculating their optimal path
         for car in new_cars:
+            print(len(cars))
             if car["time spawned"] == time:
+                print("starting to determine optimal path")
                 car["optimal path"], car["optimal travel time"] = determine_optimal_route(car, nodes, new_edges, time, heuristic_constant, distance_matrix)
+                print("optimal path", car["optimal path"])
                 
                 if car["optimal path"] is None:
                     car["active"] = False  # No route available
@@ -60,6 +65,8 @@ def simulate_A_star(nodes, edges, cars, alpha, beta, sigma, num_minutes, distanc
                     car["location"] = car["origin"]
                     car["next edge"] = car["optimal path"][0] + " → " + car["optimal path"][1] if len(car["optimal path"]) > 1 else None
         
+        print("goen through cars")
+
         ## Moving all active cars according to their predetermined optimal path
         for car in new_cars:
             # Checking if the car is in the system (active)
@@ -120,6 +127,8 @@ def simulate_A_star(nodes, edges, cars, alpha, beta, sigma, num_minutes, distanc
                 
             else:
                 continue
+
+        print("goen through cars")
     
         ## Based on the number of cars on each edge, calculate the travel time of each edge
         for edge, properties in new_edges.items():
