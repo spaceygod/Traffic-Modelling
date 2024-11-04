@@ -68,6 +68,10 @@ def parse_highway_data(file_path):
                     edge_key = f"{city_from} → {city_to}"
                     reverse_edge_key = f"{city_to} → {city_from}"
 
+                    # Don't add België and Duitsland
+                    if city_from == "België" or city_to == "België" or city_from == "Duitsland" or city_to == "Duitsland":
+                        continue
+
                     # Add the road to the edges dictionary (original direction)
                     edges[edge_key] = {
                         "highway": current_highway,

@@ -18,10 +18,10 @@ l_car = 4.5 # Length of a car in meters
 d_spacing = 55 # Minimum safe spacing between cars in meters
 
 # Simulation settings
-num_minutes = 10*60 # 10 hours
-warmup_steps = 2.5*60 # 2.5 hours (travel time from farest edges in the netherlands to each other)
-total_cars_spawned_each_minute = 1500
-car_distribution_std = 50
+num_minutes = 10#*60 # 10 hours
+warmup_steps = 2#.5#*60 # 2.5 hours (travel time from farest edges in the netherlands to each other)
+total_cars_spawned_each_minute = 15
+car_distribution_std = 5
 heuristic_constant = 1
 
 # Node positions for plotting
@@ -38,7 +38,7 @@ nodes = {
     "Assen": {"coordinates": (53.0010, 6.5622), "population": 68000},
     "Gouda": {"coordinates": (52.0112, 4.7111), "population": 74000},
     "Utrecht": {"coordinates": (52.0907, 5.1214), "population": 360000},
-    "België": {"coordinates": (50.85, 4.50), "population": None},
+    # "België": {"coordinates": (50.85, 4.50), "population": None},
     "Bad Nieuweschans": {"coordinates": (53.1842, 7.2102), "population": 1500},
     "Zevenaar": {"coordinates": (51.9315, 6.0722), "population": 24000},
     "Lelystad": {"coordinates": (52.5185, 5.4714), "population": 79000},
@@ -60,7 +60,7 @@ nodes = {
     "Bergen op Zoom": {"coordinates": (51.4936, 4.2871), "population": 67000},
     "Apeldoorn": {"coordinates": (52.2112, 5.9699), "population": 165000},
     "Stein": {"coordinates": (50.9725, 5.7707), "population": 25000},
-    "Duitsland": {"coordinates": (52.17, 7.10), "population": None},
+    # "Duitsland": {"coordinates": (52.17, 7.10), "population": None},
     "Nijmegen": {"coordinates": (51.8126, 5.8372), "population": 178000},
     "Westpoort": {"coordinates": (52.4056, 4.8167), "population": None},
     "Maasvlakte": {"coordinates": (51.9554, 4.0236), "population": None},

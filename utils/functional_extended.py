@@ -235,20 +235,33 @@ def switch_x_y(nodes):
 def save_simulation_results(cars, nodes, edges, distance_matrix, heuristic_constant, filename="simulation_results.csv"):
     # Prepare data for each car
     car_data = []
-    # print(cars)
-    for car in tqdm(range(cars), desc=f"Saving to csv*"):
+
+    # Optimal path and travel time if the system were empty
+    # Temporarily set all edges' travel times to their minimum (tt_0) values
+    empty_edges = {edge: {**properties, "travel time": [properties["tt_0"]] * len(properties["travel time"])}
+                       for edge, properties in edges.items()}
+    
+    # Cache for storing computed optimal paths and travel times for each unique (origin, destination)
+    optimal_path_cache = {}
+
+    for car in tqdm(cars, desc="Saving to CSV"):
         # Path the car actually took
         actual_path = car["optimal path"] if car["optimal path"] is not None else car["trajectory"]
         time_taken = car["time arrived"] - car["time spawned"] if car["time arrived"] is not None else None
         
-        # Optimal path and travel time if the system were empty
-        # Temporarily set all edges' travel times to their minimum (tt_0) values
-        empty_edges = {edge: {**properties, "travel time": [properties["tt_0"]] * len(properties["travel time"])}
-                       for edge, properties in edges.items()}
-        
-        optimal_path_empty, optimal_travel_time_empty = determine_optimal_route(
-            car, nodes, empty_edges, car["time spawned"], heuristic_constant, distance_matrix
-        )
+        # Check if the optimal path for the car's (origin, destination) pair is already cached
+        origin, destination = car["origin"], car["destination"]
+        if (origin, destination) in optimal_path_cache:
+            # Retrieve from cache
+            optimal_path_empty, optimal_travel_time_empty = optimal_path_cache[(origin, destination)]
+        else:
+            # Compute the optimal path and travel time if the system were empty
+            optimal_path_empty, optimal_travel_time_empty = determine_optimal_route(
+                car, nodes, empty_edges, car["time spawned"], heuristic_constant, distance_matrix
+            )
+            
+            # Cache the result for this (origin, destination) pair
+            optimal_path_cache[(origin, destination)] = (optimal_path_empty, optimal_travel_time_empty)
         
         # Add the car data to the list
         car_data.append({
@@ -272,7 +285,7 @@ def change_population(nodes):
 
     for node, properties in new_nodes.items():
         if properties['population'] != None:
-            if properties['population'] <= 200000:
+            if properties['population'] <= 10000:
                 new_nodes[node]['population'] = None
             else:
                 new_nodes[node]['population'] = 1
