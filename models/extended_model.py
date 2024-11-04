@@ -4,8 +4,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import numpy as np
 import math
-from utils.functional_extended import add_properties_to_nodes, add_properties_to_edges, print_nodes, print_edges, print_distance_matrix, print_travel_matrix, print_cars_spawned_each_minute, print_cars, change_capacity
-from utils.simulate_extended import simulate_A_star, iterate_A_star, determine_optimal_route, simulate_A_mod
+from utils.functional_extended import add_properties_to_nodes, add_properties_to_edges, print_nodes, print_edges, print_distance_matrix, print_travel_matrix, print_cars_spawned_each_minute, print_cars, change_capacity, iterate_A_star
+from utils.simulate_extended import simulate_A_star, determine_optimal_route, simulate_A_mod
 from utils.modified_A_star import run_A_mod, update_future_edges
 from real_data.parse_edges import parse_highway_data
 

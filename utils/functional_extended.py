@@ -1,5 +1,9 @@
+<<<<<<< HEAD
 import numpy as np
 import copy
+=======
+import csv
+>>>>>>> 759ac3af4bee46f670972848778595f032512dba
 
 # Add neighboring nodes to each node
 def add_properties_to_nodes(nodes, edges):
@@ -211,6 +215,7 @@ def find_next_node(node_list, target_node):
 def convert_nodes(nodes):
     return {node: nodes[node]["coordinates"] for node in nodes} 
 
+<<<<<<< HEAD
 # Switch x and y coordinates of locations in nodes
 def switch_x_y(nodes):
     new_nodes = copy.deepcopy(nodes)
@@ -222,3 +227,39 @@ def switch_x_y(nodes):
         new_nodes[node]['coordinates'] = (y, x)
 
     return new_nodes
+=======
+# Saving the simulation results to a CSV file
+def save_simulation_results(cars, nodes, edges, distance_matrix, heuristic_constant, filename="simulation_results.csv"):
+    # Prepare data for each car
+    car_data = []
+    # print(cars)
+    for car in cars:
+        # Path the car actually took
+        actual_path = car["optimal path"]
+        time_taken = car["time arrived"] - car["time spawned"] if car["time arrived"] is not None else None
+        
+        # Optimal path and travel time if the system were empty
+        # Temporarily set all edges' travel times to their minimum (tt_0) values
+        empty_edges = {edge: {**properties, "travel time": [properties["tt_0"]] * len(properties["travel time"])}
+                       for edge, properties in edges.items()}
+        
+        optimal_path_empty, optimal_travel_time_empty = determine_optimal_route(
+            car, nodes, empty_edges, car["time spawned"], heuristic_constant, distance_matrix
+        )
+        
+        # Add the car data to the list
+        car_data.append({
+            "Car ID": car["id"],
+            "Chosen Path": actual_path,
+            "Time Taken": time_taken,
+            "Optimal Path (Empty System)": optimal_path_empty,
+            "Optimal Time (Empty System)": optimal_travel_time_empty
+        })
+    
+    # Save the data to a CSV file
+    with open(filename, mode="w", newline="") as file:
+        writer = csv.DictWriter(file, fieldnames=["Car ID", "Chosen Path", "Time Taken", "Optimal Path (Empty System)", "Optimal Time (Empty System)"])
+        writer.writeheader()
+        for car in car_data:
+            writer.writerow(car)
+>>>>>>> 759ac3af4bee46f670972848778595f032512dba
