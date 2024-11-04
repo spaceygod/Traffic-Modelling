@@ -223,8 +223,5 @@ bg_image = mpimg.imread('./Images/netherlands/blank_netherlands_adjusted.png')
 lat_min, lat_max = 50.75, 53.55  # Approx latitude range of the Netherlands
 lon_min, lon_max = 3.36, 7.22    # Approx longitude range of the Netherlands
 
-# # Simulate the A* algorithm
-# cars_A_star, edges_A_star = simulate_A_star(nodes, edges, cars, alpha, beta, sigma, num_minutes, distance_matrix, heuristic_constant, bg_image=bg_image, lat_min=lat_min, lat_max=lat_max, lon_min=lon_min, lon_max=lon_max)
-
 # Simulate the modified A* algorithm
 cars_A_mod, edges_A_mod, future_edges_A_mod = simulate_A_mod(nodes, edges, cars, alpha, beta, sigma, num_minutes, distance_matrix, heuristic_constant)

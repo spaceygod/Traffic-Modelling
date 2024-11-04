@@ -135,7 +135,16 @@ def simulate_A_star(nodes, edges, cars, alpha, beta, sigma, num_minutes, distanc
     if animate:
         # Animate the plot over time
         anim = FuncAnimation(fig, update, frames=range(num_minutes), repeat=False, interval=100)
+
+        try: 
+            # Save as GIF
+            anim.save("A_star_simulation.gif", writer="pillow", fps=20)
+            print("Animation saved as A_star_simulation.gif")
+        except Exception as e:
+            print("Error saving animation as gif:", e)
+
         plt.show()
+        plt.close(fig)
     else:
         # Run the simulation without animation using tqdm for a progress bar
         for t in tqdm(range(num_minutes), desc=f"Simulating A*"):
