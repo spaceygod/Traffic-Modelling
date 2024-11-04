@@ -52,7 +52,7 @@ Heerenveen - Drachten: 2x2 lanes : 20.6
 Drachten - Groningen: 2x2 lanes : 33.9
 Groningen - Hoogezand: 2x2 lanes : 15.0
 Hoogezand - Winschoten: 2x2 lanes : 21.6
-Winschoten - Bad Nieuweschan: 2x2 lanes : 11.4
+Winschoten - Bad Nieuweschans: 2x2 lanes : 11.4
 Bad Nieuweschans - Duitsland: 2x2 lanes : 1.7
 
 A8:
