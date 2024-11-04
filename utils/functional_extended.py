@@ -1,6 +1,7 @@
 import numpy as np
 import copy
 import csv
+from tqdm import tqdm
 
 # Add neighboring nodes to each node
 def add_properties_to_nodes(nodes, edges):
@@ -235,7 +236,7 @@ def save_simulation_results(cars, nodes, edges, distance_matrix, heuristic_const
     # Prepare data for each car
     car_data = []
     # print(cars)
-    for car in cars:
+    for car in tqdm(range(cars), desc=f"Saving to csv*"):
         # Path the car actually took
         actual_path = car["optimal path"] if car["optimal path"] is not None else car["trajectory"]
         time_taken = car["time arrived"] - car["time spawned"] if car["time arrived"] is not None else None
