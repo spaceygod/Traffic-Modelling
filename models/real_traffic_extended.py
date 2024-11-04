@@ -18,9 +18,9 @@ l_car = 4.5 # Length of a car in meters
 d_spacing = 55 # Minimum safe spacing between cars in meters
 
 # Simulation settings
-num_minutes = 1000
+num_minutes = 100
 warmup_steps = 0
-total_cars_spawned_each_minute = 10
+total_cars_spawned_each_minute = 100
 car_distribution_std = 0.0001
 heuristic_constant = 1
 
@@ -224,7 +224,10 @@ for minute in range(num_minutes):
 # lon_min, lon_max = 3.36, 7.22    # Approx longitude range of the Netherlands
 
 # Simulate the A* algorithm
-cars_A_star, edges_A_star = simulate_A_star(nodes, edges, cars, alpha, beta, sigma, num_minutes, distance_matrix, heuristic_constant)
+cars_A_star, edges_A_star = simulate_A_star(nodes, edges, cars, alpha, beta, sigma, num_minutes, distance_matrix, heuristic_constant, animate=False)
 
 # Simulate the modified A* algorithm
 # cars_A_mod, edges_A_mod, future_edges_A_mod = simulate_A_mod(nodes, edges, cars, alpha, beta, sigma, num_minutes, distance_matrix, heuristic_constant)
+
+
+print('finished')
