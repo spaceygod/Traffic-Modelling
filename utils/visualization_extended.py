@@ -185,7 +185,7 @@ def update_plot(t, edges, vehicle_counts, edge_texts, timestep_text, num_minutes
         congestion = num_cars / capacity if capacity > 0 else 0
         congestion = min(max(congestion, 0), 1)
 
-        # text.set_text(f"{num_cars}/{capacity}")
+        text.set_text(f"{num_cars}/{capacity}")
         edge_color = cmap(norm(congestion))
         edge_lines[edge].set_color(edge_color)
 

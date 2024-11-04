@@ -4,8 +4,9 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import numpy as np
 import math
-from utils.functional_extended import add_properties_to_nodes, add_properties_to_edges, print_nodes, print_edges, print_distance_matrix, print_travel_matrix, print_cars_spawned_each_minute, print_cars, change_capacity, switch_x_y
-from utils.simulate_extended import simulate_A_star, iterate_A_star, determine_optimal_route, simulate_A_mod
+import matplotlib.image as mpimg
+from utils.functional_extended import add_properties_to_nodes, add_properties_to_edges, print_nodes, print_edges, print_distance_matrix, print_travel_matrix, print_cars_spawned_each_minute, print_cars, change_capacity, switch_x_y, iterate_A_star
+from utils.simulate_extended import simulate_A_star, determine_optimal_route, simulate_A_mod
 from utils.modified_A_star import run_A_mod, update_future_edges
 from real_data.parse_edges import parse_highway_data
 
@@ -19,7 +20,7 @@ d_spacing = 55 # Minimum safe spacing between cars in meters
 # Simulation settings
 num_minutes = 1000
 warmup_steps = 0
-total_cars_spawned_each_minute = 30
+total_cars_spawned_each_minute = 40
 car_distribution_std = 0.0001
 heuristic_constant = 1
 
@@ -57,14 +58,14 @@ nodes = {
     "Diemen": {"coordinates": (52.3392, 4.9622), "population": 32000},
     "Venlo": {"coordinates": (51.3704, 6.1724), "population": 101000},
     "Bergen op Zoom": {"coordinates": (51.4936, 4.2871), "population": 67000},
-    "Apeldoorn": {"coordinates": (52.2112, 5.9699), "population": 9165000},
+    "Apeldoorn": {"coordinates": (52.2112, 5.9699), "population": 165000},
     "Stein": {"coordinates": (50.9725, 5.7707), "population": 25000},
     "Duitsland": {"coordinates": (52.17, 7.10), "population": None},
     "Nijmegen": {"coordinates": (51.8126, 5.8372), "population": 178000},
     "Westpoort": {"coordinates": (52.4056, 4.8167), "population": None},
     "Maasvlakte": {"coordinates": (51.9554, 4.0236), "population": None},
     "Moerdijk": {"coordinates": (51.7031, 4.6139), "population": 7400},
-    "Amsterdam": {"coordinates": (52.3676, 4.9041), "population": 9931000},
+    "Amsterdam": {"coordinates": (52.3676, 4.9041), "population": 931000},
     "Zoetermeer": {"coordinates": (52.0570, 4.4931), "population": 125000},
     "Doetinchem": {"coordinates": (51.9654, 6.2880), "population": 57000},
     "Heerlen": {"coordinates": (50.8882, 5.9795), "population": 88000},
@@ -83,7 +84,7 @@ nodes = {
     "Berkel-Enschot": {"coordinates": (51.5816, 5.1666), "population": 11000},
     "Vught": {"coordinates": (51.6558, 5.2873), "population": 27000},
     "Wassenaar": {"coordinates": (52.1397, 4.4019), "population": 26000},
-    "Groningen": {"coordinates": (53.2194, 6.5665), "population": 9235000},
+    "Groningen": {"coordinates": (53.2194, 6.5665), "population": 235000},
     "Hoofddorp": {"coordinates": (52.3061, 4.6907), "population": 78590},
     "Amersfoort": {"coordinates": (52.1560, 5.3878), "population": 159130},
     "Roosendaal": {"coordinates": (51.5306, 4.4654), "population": 77700},
@@ -110,7 +111,7 @@ nodes = {
     "Hengelo": {"coordinates": (52.2659, 6.7930), "population": 81709},
     "Goes": {"coordinates": (51.5047, 3.8883), "population": 38435},
     "Middelburg": {"coordinates": (51.4988, 3.6136), "population": 48732},
-    "Rotterdam": {"coordinates": (51.9225, 4.47917), "population": 9655468},
+    "Rotterdam": {"coordinates": (51.9225, 4.47917), "population": 655468},
     "Enschede": {"coordinates": (52.2215, 6.8937), "population": 159286},
     "Joure": {"coordinates": (52.9633, 5.8051), "population": 13110},
     "Hoogeveen": {"coordinates": (52.7221, 6.4866), "population": 55949},
@@ -154,7 +155,7 @@ add_properties_to_nodes(nodes, edges)
 add_properties_to_edges(edges, l_car, d_spacing, num_minutes)
 
 # Reduce the capacity of each edge based on the number of cars in the network
-change_capacity(edges, 0.001)
+change_capacity(edges, 0.02)
 
 ## Create a dictionary containing what fraction of cars will travel from each node A to each node B
 travel_matrix = {}
@@ -211,25 +212,16 @@ for minute in range(num_minutes):
             cars.append(car)
             car_id += 1
 
-# Simulate the A* algorithm
-cars_A_star, edges_A_star = simulate_A_star(nodes, edges, cars, alpha, beta, sigma, num_minutes, distance_matrix, heuristic_constant)
+# # Reloading the image and setting up dimensions
+# bg_image = mpimg.imread('./Images/netherlands/blank_netherlands_adjusted.png')
 
-# Test the modified A* algorithm
-# test_car = {
-#     "id": 0, 
-#     "origin": "City 1", 
-#     "destination": "City 2", 
-#     "optimal path": None, 
-#     "optimal travel time": None, 
-#     "trajectory": None, # list of the form [(first node on path, time entered edge after node), (second node on path, time entered edge after node), ...] (only accessed in modified A* simulation)
-#     "time spawned": 10, 
-#     "time arrived": None, 
-#     "active": False, 
-#     "location": None, 
-#     "time entered last edge": None, 
-#     "finished edge": False,
-#     "next edge": None
-# }
+# # Set the correct lat/lon extent for the map of the Netherlands
+# # Here we assume these lat/lon bounds (min_lat, max_lat, min_lon, max_lon) for the image:
+# lat_min, lat_max = 50.75, 53.55  # Approx latitude range of the Netherlands
+# lon_min, lon_max = 3.36, 7.22    # Approx longitude range of the Netherlands
+
+# Simulate the A* algorithm
+# cars_A_star, edges_A_star = simulate_A_star(nodes, edges, cars, alpha, beta, sigma, num_minutes, distance_matrix, heuristic_constant)
 
 # Simulate the modified A* algorithm
 # cars_A_mod, edges_A_mod, future_edges_A_mod = simulate_A_mod(nodes, edges, cars, alpha, beta, sigma, num_minutes, distance_matrix, heuristic_constant)

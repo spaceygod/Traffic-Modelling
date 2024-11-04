@@ -1,9 +1,6 @@
-<<<<<<< HEAD
 import numpy as np
 import copy
-=======
 import csv
->>>>>>> 759ac3af4bee46f670972848778595f032512dba
 
 # Add neighboring nodes to each node
 def add_properties_to_nodes(nodes, edges):
@@ -125,7 +122,14 @@ def iterate_A_star(current_route, current_queue, nodes, edges, time, heuristic_c
 
     for neighbor in neighboring_nodes:
         new_path = current_path + [neighbor]
-        new_travel_time = current_travel_time + edges[last_node_of_path + " → " + neighbor]["travel time"][time]
+        next_edge = last_node_of_path + " → " + neighbor
+
+        # Increase the cost due to travel time whenever the edge is full (so that the car would have to wait)
+        if edges[next_edge]['cars on edge'][time] >= edges[next_edge]['capacity'] - 2:
+            new_travel_time = current_travel_time + edges[next_edge]['travel time'][time] + 100000
+        else:
+            new_travel_time = current_travel_time + edges[next_edge]["travel time"][time]
+        
         new_heuristic = heuristic_constant * distance_matrix[neighbor + " → " + destination]
         new_total_cost = new_travel_time + new_heuristic
 
@@ -215,7 +219,6 @@ def find_next_node(node_list, target_node):
 def convert_nodes(nodes):
     return {node: nodes[node]["coordinates"] for node in nodes} 
 
-<<<<<<< HEAD
 # Switch x and y coordinates of locations in nodes
 def switch_x_y(nodes):
     new_nodes = copy.deepcopy(nodes)
@@ -227,7 +230,6 @@ def switch_x_y(nodes):
         new_nodes[node]['coordinates'] = (y, x)
 
     return new_nodes
-=======
 # Saving the simulation results to a CSV file
 def save_simulation_results(cars, nodes, edges, distance_matrix, heuristic_constant, filename="simulation_results.csv"):
     # Prepare data for each car
@@ -262,4 +264,3 @@ def save_simulation_results(cars, nodes, edges, distance_matrix, heuristic_const
         writer.writeheader()
         for car in car_data:
             writer.writerow(car)
->>>>>>> 759ac3af4bee46f670972848778595f032512dba
