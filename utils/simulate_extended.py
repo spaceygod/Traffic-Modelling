@@ -1,5 +1,6 @@
 import sys
 import os
+from tqdm import tqdm
 # import tqdm
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -23,16 +24,20 @@ from utils.modified_A_star import run_A_mod, update_future_edges
 #
 # The simulation returns the travel time of each car. Cars that did not reach their destination and cars spawned during the warmup steps are ignored.
 
-def simulate_A_star(nodes, edges, cars, alpha, beta, sigma, num_minutes, distance_matrix, heuristic_constant, animate=True):
+def simulate_A_star(nodes, edges, cars, alpha, beta, sigma, num_minutes, distance_matrix, heuristic_constant, bg_image=None, lat_min=None, lat_max=None, lon_min=None, lon_max=None):
     # Cars and edges after the simulation; a copy is made so that the original cars and edges are not changed and can be used for the normal A* simulation
     new_cars = copy.deepcopy(cars) 
     new_edges = copy.deepcopy(edges)
 
+    # Ask the user if it wants the traffic simulation to be animated
+    animate = input("Do you want to animate the traffic simulation in real-time? Code wil run slower. (y/n): ").lower() == "y"
+
     # Converting the nodes database from the format used in the simulation to the format used in the visualization
     nodes_visualization = convert_nodes(nodes)
 
-    # Initializing the visualization
-    fig, ax, edge_texts, timestep_text, edge_lines = initialize_plot(edges, nodes_visualization)
+    if animate:
+        # Initializing the visualization
+        fig, ax, edge_texts, timestep_text, edge_lines = initialize_plot(edges, nodes_visualization, bg_image, lat_min, lat_max, lon_min, lon_max)
 
     def update(time):
         ## Removing all cars that have reached their destination
@@ -123,20 +128,21 @@ def simulate_A_star(nodes, edges, cars, alpha, beta, sigma, num_minutes, distanc
         # Determining the vehicle_counts dictionary used in the visualization
         vehicle_counts = {edge: [new_edges[edge]["cars on edge"][time]] for edge in edges}
 
-        # Update the visualization
-        update_plot(time, edges, vehicle_counts, edge_texts, timestep_text, num_minutes, edge_lines)
+        if animate:
+            # Update the visualization
+            update_plot(time, edges, vehicle_counts, edge_texts, timestep_text, num_minutes, edge_lines)
 
     if animate:
         # Animate the plot over time
         anim = FuncAnimation(fig, update, frames=range(num_minutes), repeat=False, interval=100)
         plt.show()
-    # else:
-    #     # Run the simulation without animation using tqdm for a progress bar
-    #     for t in tqdm(range(num_minutes), desc=f"Simulating"):
-    #         update(t)
+    else:
+        # Run the simulation without animation using tqdm for a progress bar
+        for t in tqdm(range(num_minutes), desc=f"Simulating A*"):
+            update(t)
 
     # Call to save the simulation results after the loop ends
-    save_simulation_results(new_cars, nodes, new_edges, distance_matrix, heuristic_constant)
+    save_simulation_results(new_cars, nodes, new_edges, distance_matrix, heuristic_constant, filename="A_star_simulation_results.csv")
 
     return new_cars, new_edges
 
@@ -150,8 +156,7 @@ def simulate_A_mod(nodes, edges, cars, alpha, beta, sigma, num_minutes, distance
     future_edges = copy.deepcopy(edges)
 
     # Iteration of the simulation
-    for time in range(num_minutes):
-        
+    for time in tqdm(range(num_minutes), desc=f"Simulating A* Mod"):
         ## Removing all cars that have reached their destination
         for car in new_cars:
             if car["location"] != None:
@@ -240,6 +245,9 @@ def simulate_A_mod(nodes, edges, cars, alpha, beta, sigma, num_minutes, distance
         ## Based on the number of cars on each edge, calculate the travel time of each edge
         for edge, properties in new_edges.items():
             properties["travel time"][time] = travel_time_bpr(properties["tt_0"], properties["cars on edge"][time], properties["capacity"], alpha, beta, sigma)
+
+    # Call to save the simulation results after the loop ends
+    save_simulation_results(new_cars, nodes, new_edges, distance_matrix, heuristic_constant, filename="A_star_mod_simulation_results.csv")
 
     return new_cars, new_edges, future_edges
                 

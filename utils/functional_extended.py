@@ -237,7 +237,7 @@ def save_simulation_results(cars, nodes, edges, distance_matrix, heuristic_const
     # print(cars)
     for car in cars:
         # Path the car actually took
-        actual_path = car["optimal path"]
+        actual_path = car["optimal path"] if car["optimal path"] is not None else car["trajectory"]
         time_taken = car["time arrived"] - car["time spawned"] if car["time arrived"] is not None else None
         
         # Optimal path and travel time if the system were empty
@@ -252,7 +252,7 @@ def save_simulation_results(cars, nodes, edges, distance_matrix, heuristic_const
         # Add the car data to the list
         car_data.append({
             "Car ID": car["id"],
-            "Chosen Path": actual_path,
+            "Chosen Path": actual_path if car["optimal path"] is not None else [actual_path[0] for actual_path in actual_path],
             "Time Taken": time_taken,
             "Optimal Path (Empty System)": optimal_path_empty,
             "Optimal Time (Empty System)": optimal_travel_time_empty

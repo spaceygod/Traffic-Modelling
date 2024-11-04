@@ -17,11 +17,18 @@ sigma = 0.1
 l_car = 4.5 # Length of a car in meters
 d_spacing = 55 # Minimum safe spacing between cars in meters
 
+# # Simulation settings
+# num_minutes = 10*60 # 10 hours
+# warmup_steps = 3*60 # 3 hours (travel time from farest edges in the netherlands to each other)
+# total_cars_spawned_each_minute = 1000
+# car_distribution_std = 50
+# heuristic_constant = 1
+
 # Simulation settings
-num_minutes = 1000
-warmup_steps = 0
-total_cars_spawned_each_minute = 10
-car_distribution_std = 0.0001
+num_minutes = 60 # 10*60 # 10 hours
+warmup_steps = 10 #3*60 # 3 hours (travel time from farest edges in the netherlands to each other)
+total_cars_spawned_each_minute = 10#00
+car_distribution_std = 1 #50
 heuristic_constant = 1
 
 # Node positions for plotting
@@ -157,8 +164,8 @@ add_properties_to_nodes(nodes, edges)
 # Add properties to edges
 add_properties_to_edges(edges, l_car, d_spacing, num_minutes)
 
-# Reduce the capacity of each edge based on the number of cars in the network
-change_capacity(edges, 0.005)
+# # Reduce the capacity of each edge based on the number of cars in the network
+# change_capacity(edges, 0.005)
 
 ## Create a dictionary containing what fraction of cars will travel from each node A to each node B
 travel_matrix = {}
@@ -215,16 +222,16 @@ for minute in range(num_minutes):
             cars.append(car)
             car_id += 1
 
-# # Reloading the image and setting up dimensions
-# bg_image = mpimg.imread('./Images/netherlands/blank_netherlands_adjusted.png')
+# Reloading the image and setting up dimensions
+bg_image = mpimg.imread('./Images/netherlands/blank_netherlands_adjusted.png')
 
-# # Set the correct lat/lon extent for the map of the Netherlands
-# # Here we assume these lat/lon bounds (min_lat, max_lat, min_lon, max_lon) for the image:
-# lat_min, lat_max = 50.75, 53.55  # Approx latitude range of the Netherlands
-# lon_min, lon_max = 3.36, 7.22    # Approx longitude range of the Netherlands
+# Set the correct lat/lon extent for the map of the Netherlands
+# Here we assume these lat/lon bounds (min_lat, max_lat, min_lon, max_lon) for the image:
+lat_min, lat_max = 50.75, 53.55  # Approx latitude range of the Netherlands
+lon_min, lon_max = 3.36, 7.22    # Approx longitude range of the Netherlands
 
 # Simulate the A* algorithm
-cars_A_star, edges_A_star = simulate_A_star(nodes, edges, cars, alpha, beta, sigma, num_minutes, distance_matrix, heuristic_constant)
+cars_A_star, edges_A_star = simulate_A_star(nodes, edges, cars, alpha, beta, sigma, num_minutes, distance_matrix, heuristic_constant, bg_image=bg_image, lat_min=lat_min, lat_max=lat_max, lon_min=lon_min, lon_max=lon_max)
 
 # Simulate the modified A* algorithm
 # cars_A_mod, edges_A_mod, future_edges_A_mod = simulate_A_mod(nodes, edges, cars, alpha, beta, sigma, num_minutes, distance_matrix, heuristic_constant)
